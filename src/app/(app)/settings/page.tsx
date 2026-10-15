@@ -1,6 +1,7 @@
 import { Download, LogOut, Users } from "lucide-react";
+import Link from "next/link";
 import { requireCtx } from "@/core/auth/session";
-import { getHousehold, listMembers } from "@/core/services/household";
+import { getHousehold, getPrimaryProperty, listMembers } from "@/core/services/household";
 import { isVaultAvailable } from "@/core/services/vault";
 import { env } from "@/core/env";
 import { Card, PageHeader, Pill, Section } from "@/components/ui/page";
@@ -11,11 +12,20 @@ export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const ctx = await requireCtx();
-  const [household, members] = await Promise.all([getHousehold(ctx), listMembers(ctx)]);
+  const [household, members, property] = await Promise.all([getHousehold(ctx), listMembers(ctx), getPrimaryProperty(ctx)]);
   return (
     <>
       <PageHeader title="Settings" description={`Signed in as ${ctx.user.name} (${ctx.user.email}).`} />
       <div className="flex flex-col gap-6">
+        {!property && (
+          <div className="rounded-xl bg-warn-soft text-warn px-4 py-3 text-sm">
+            Your home is not set up yet.{" "}
+            <Link href="/onboarding" className="font-semibold underline">
+              Finish onboarding
+            </Link>{" "}
+            to unlock the dashboard, inventory and maintenance.
+          </div>
+        )}
         <Section title="Household">
           <Card className="p-4 sm:p-5 flex flex-col gap-4">
             <RenameHouseholdForm name={household.name} />
