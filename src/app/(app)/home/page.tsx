@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CalendarClock, Hammer, House, LifeBuoy, Package, Plus, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, DoorOpen, Hammer, LifeBuoy, Package, Plus, ShieldAlert, Sparkles } from "lucide-react";
 import { requirePropertyCtx } from "@/core/auth/session";
 import { getDashboard } from "@/core/services/dashboard";
 import { getProperty } from "@/core/services/property";
@@ -41,7 +41,7 @@ export default async function HomePage() {
             }
           />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <QuickLink href="/my-home" icon={<House />} title="Set up rooms" body="Give your systems a place to live." />
+            <QuickLink href="/my-home" icon={<DoorOpen />} title="Set up rooms" body="Give your systems a place to live." />
             <QuickLink href="/preparedness" icon={<LifeBuoy />} title="Record shutoffs" body="Water, gas and electrical, findable in seconds." />
             <QuickLink href="/documents/new" icon={<Package />} title="File a manual" body="Attach it to the appliance it belongs to." />
           </div>
