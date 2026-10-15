@@ -4,19 +4,6 @@ import { RECURRENCE_PRESETS } from "@/core/domain/recurrence";
 
 type Opt = { id: string; name: string };
 
-export function LocationSelect({ locations, defaultValue, name = "locationId", id = name }: { locations: Opt[]; defaultValue?: string | null; name?: string; id?: string }) {
-  return (
-    <Select id={id} name={name} defaultValue={defaultValue ?? ""}>
-      <option value="">Not set</option>
-      {locations.map((l) => (
-        <option key={l.id} value={l.id}>
-          {l.name}
-        </option>
-      ))}
-    </Select>
-  );
-}
-
 export function AssetSelect({ assets, defaultValue, name = "assetId", id = name }: { assets: Opt[]; defaultValue?: string | null; name?: string; id?: string }) {
   return (
     <Select id={id} name={name} defaultValue={defaultValue ?? ""}>

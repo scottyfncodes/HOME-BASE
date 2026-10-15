@@ -27,7 +27,7 @@ export async function createProjectAction(_p: ActionState, formData: FormData): 
     const row = await createProject(ctx, parsed.data);
     revalidatePath("/projects");
     redirect(`/projects/${row.id}`);
-  });
+  }, formData);
 }
 
 export async function updateProjectAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -39,7 +39,7 @@ export async function updateProjectAction(_p: ActionState, formData: FormData): 
     await updateProject(ctx, id, parsed.data);
     revalidatePath("/projects");
     redirect(`/projects/${id}`);
-  });
+  }, formData);
 }
 
 export async function setProjectStatusAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -52,7 +52,7 @@ export async function setProjectStatusAction(_p: ActionState, formData: FormData
     revalidatePath("/projects");
     revalidatePath("/home");
     redirect(`/projects/${id}`);
-  });
+  }, formData);
 }
 
 export async function deleteProjectAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -61,7 +61,7 @@ export async function deleteProjectAction(_p: ActionState, formData: FormData): 
     await deleteProject(ctx, String(formData.get("id")));
     revalidatePath("/projects");
     redirect("/projects");
-  });
+  }, formData);
 }
 
 export async function addProjectTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -73,7 +73,7 @@ export async function addProjectTaskAction(_p: ActionState, formData: FormData):
     await addProjectTask(ctx, projectId, parsed.data);
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }
 
 export async function toggleProjectTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -82,7 +82,7 @@ export async function toggleProjectTaskAction(_p: ActionState, formData: FormDat
     const projectId = await toggleProjectTask(ctx, String(formData.get("taskId")), formData.get("done") === "1");
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }
 
 export async function deleteProjectTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -91,7 +91,7 @@ export async function deleteProjectTaskAction(_p: ActionState, formData: FormDat
     const projectId = await deleteProjectTask(ctx, String(formData.get("taskId")));
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }
 
 export async function linkAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -103,7 +103,7 @@ export async function linkAssetAction(_p: ActionState, formData: FormData): Prom
     await linkProjectAsset(ctx, projectId, assetId);
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }
 
 export async function unlinkAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -113,7 +113,7 @@ export async function unlinkAssetAction(_p: ActionState, formData: FormData): Pr
     await unlinkProjectAsset(ctx, projectId, String(formData.get("assetId")));
     revalidatePath(`/projects/${projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }
 
 export async function createExpenseAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -124,7 +124,7 @@ export async function createExpenseAction(_p: ActionState, formData: FormData): 
     const row = await createExpense(ctx, parsed.data);
     revalidatePath("/projects");
     redirect(row.projectId ? `/projects/${row.projectId}` : row.assetId ? `/inventory/${row.assetId}` : "/projects");
-  });
+  }, formData);
 }
 
 export async function deleteExpenseAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -134,5 +134,5 @@ export async function deleteExpenseAction(_p: ActionState, formData: FormData): 
     revalidatePath("/projects");
     if (res.projectId) revalidatePath(`/projects/${res.projectId}`);
     return { ok: true };
-  });
+  }, formData);
 }

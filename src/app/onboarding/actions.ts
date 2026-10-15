@@ -17,7 +17,7 @@ export async function createPropertyAction(_prev: ActionState, formData: FormDat
     if (!parsed.ok) return { ok: false, message: parsed.message, errors: parsed.errors, values: echo(formData) };
     await createProperty(ctx, parsed.data);
     redirect("/onboarding?step=rooms");
-  });
+  }, formData);
 }
 
 export async function createRoomsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -30,7 +30,7 @@ export async function createRoomsAction(_prev: ActionState, formData: FormData):
       .filter(Boolean);
     await createLocations(ctx, [...picked, ...custom]);
     redirect("/onboarding?step=first");
-  });
+  }, formData);
 }
 
 export async function createFirstAssetAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -40,5 +40,5 @@ export async function createFirstAssetAction(_prev: ActionState, formData: FormD
     if (!parsed.ok) return { ok: false, message: parsed.message, errors: parsed.errors, values: echo(formData) };
     await createAsset(ctx, parsed.data);
     redirect("/onboarding?step=done");
-  });
+  }, formData);
 }

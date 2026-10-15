@@ -1,9 +1,10 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
-import { CategorySelect, LocationSelect } from "@/components/forms/pickers";
+import { CategorySelect } from "@/components/forms/pickers";
 import { centsToInput } from "@/core/domain/money";
 import { createAssetAction, updateAssetAction } from "./actions";
 
@@ -41,9 +42,7 @@ export function AssetForm({ asset, locations, cancelHref }: { asset?: AssetFormV
                 <Field label="Category" htmlFor="category" error={state.errors?.category}>
                   <CategorySelect defaultValue={v("category", asset?.category ?? "appliance")} />
                 </Field>
-                <Field label="Location" htmlFor="locationId" optional error={state.errors?.locationId}>
-                  <LocationSelect locations={locations} defaultValue={v("locationId", asset?.locationId)} />
-                </Field>
+                <LocationField locations={locations} label="Location" hint="Where it lives: a room, a hallway, outside." defaultValue={v("locationId", asset?.locationId)} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
               </FormGrid>
             </FormSection>
             <FormSection title="Identification" description="From the data plate or receipt. Useful when ordering parts or filing a warranty claim.">

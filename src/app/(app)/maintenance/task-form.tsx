@@ -1,10 +1,11 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { useState } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
-import { AssetSelect, LocationSelect } from "@/components/forms/pickers";
+import { AssetSelect } from "@/components/forms/pickers";
 import { RECURRENCE_PRESETS, recurrenceToValue } from "@/core/domain/recurrence";
 import { PRIORITIES } from "@/core/domain/validation";
 import type { Recurrence } from "@/core/db/schema";
@@ -50,9 +51,7 @@ export function TaskForm({ task, assets, locations, today, cancelHref }: { task?
                 <Field label="Item" htmlFor="assetId" optional error={state.errors?.assetId}>
                   <AssetSelect assets={assets} defaultValue={v("assetId", task?.assetId)} />
                 </Field>
-                <Field label="Room / area" htmlFor="locationId" optional error={state.errors?.locationId}>
-                  <LocationSelect locations={locations} defaultValue={v("locationId", task?.locationId)} />
-                </Field>
+                <LocationField locations={locations} label="Room / area" defaultValue={v("locationId", task?.locationId)} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
               </FormGrid>
               <Field label="Details" htmlFor="description" optional hint="Filter size, which breaker, what to look for.">
                 <Textarea id="description" name="description" defaultValue={v("description", task?.description)} rows={3} />

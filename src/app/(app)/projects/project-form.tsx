@@ -1,9 +1,9 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
-import { LocationSelect } from "@/components/forms/pickers";
 import { PRIORITIES, PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "@/core/domain/validation";
 import { centsToInput } from "@/core/domain/money";
 import { createProjectAction, updateProjectAction } from "./actions";
@@ -58,9 +58,7 @@ export function ProjectForm({ project, locations, cancelHref }: { project?: Proj
                     ))}
                   </Select>
                 </Field>
-                <Field label="Room / area" htmlFor="locationId" optional error={state.errors?.locationId}>
-                  <LocationSelect locations={locations} defaultValue={v("locationId", project?.locationId)} />
-                </Field>
+                <LocationField locations={locations} label="Room / area" defaultValue={v("locationId", project?.locationId)} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
                 <Field label="Budget" htmlFor="budget" optional error={state.errors?.budget}>
                   <Input id="budget" name="budget" inputMode="decimal" placeholder="2,500" defaultValue={v("budget", centsToInput(project?.budgetCents))} />
                 </Field>

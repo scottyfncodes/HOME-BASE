@@ -6,7 +6,7 @@ import { todayIn } from "../domain/dates";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
 import { assertAsset } from "./assets";
-import { assertLocation } from "./locations";
+import { resolveLocation } from "./locations";
 import { assertProvider } from "./providers";
 
 const OPEN_STATUSES = ["idea", "planned", "in_progress", "on_hold"] as const;
@@ -78,7 +78,7 @@ async function toRow(ctx: PropertyCtx, input: ProjectInput) {
     targetOn: nullable(input.targetOn),
     completedOn,
     budgetCents: nullable(input.budget),
-    locationId: await assertLocation(ctx, input.locationId),
+    locationId: await resolveLocation(ctx, input),
     notes: nullable(input.notes),
   };
 }

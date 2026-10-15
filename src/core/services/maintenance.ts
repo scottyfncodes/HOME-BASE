@@ -7,7 +7,7 @@ import { nextDueDate } from "../domain/recurrence";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
 import { assertAsset } from "./assets";
-import { assertLocation } from "./locations";
+import { resolveLocation } from "./locations";
 import { assertProvider } from "./providers";
 
 export type TaskView = "upcoming" | "overdue" | "all" | "completed" | "cancelled";
@@ -69,7 +69,7 @@ async function toRow(ctx: PropertyCtx, input: MaintenanceTaskInput) {
     recurrence: (input.recurrence ?? null) as Recurrence | null,
     priority: input.priority,
     assetId: await assertAsset(ctx, input.assetId),
-    locationId: await assertLocation(ctx, input.locationId),
+    locationId: await resolveLocation(ctx, input),
     estimatedMinutes: nullable(input.estimatedMinutes),
     guideSlug: nullable(input.guideSlug),
   };
@@ -179,7 +179,7 @@ export async function recordMaintenance(ctx: PropertyCtx, input: MaintenanceLogI
       costCents: nullable(input.cost),
       providerId: await assertProvider(ctx, input.providerId),
       assetId: await assertAsset(ctx, input.assetId),
-      locationId: await assertLocation(ctx, input.locationId),
+      locationId: await resolveLocation(ctx, input),
       completedBy: ctx.userId,
     })
     .returning();

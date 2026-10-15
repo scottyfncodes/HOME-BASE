@@ -6,7 +6,7 @@ import { ASSET_CATEGORIES } from "../domain/validation";
 import { addDays, todayIn } from "../domain/dates";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
-import { assertLocation } from "./locations";
+import { resolveLocation } from "./locations";
 
 export type AssetSort = "name" | "newest" | "warranty" | "value";
 
@@ -107,7 +107,7 @@ async function toRow(ctx: PropertyCtx, input: AssetInput) {
   return {
     name: input.name,
     category: input.category,
-    locationId: await assertLocation(ctx, input.locationId),
+    locationId: await resolveLocation(ctx, input),
     manufacturer: nullable(input.manufacturer),
     model: nullable(input.model),
     serialNumber: nullable(input.serialNumber),

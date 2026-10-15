@@ -4,7 +4,7 @@ import { NotFoundError } from "../errors";
 import type { PreparednessInput } from "../domain/validation";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
-import { assertLocation } from "./locations";
+import { resolveLocation } from "./locations";
 
 export async function listPreparedness(ctx: PropertyCtx) {
   return ctx.db.query.preparednessItem.findMany({
@@ -27,7 +27,7 @@ async function toRow(ctx: PropertyCtx, input: PreparednessInput) {
   return {
     kind: input.kind,
     title: input.title,
-    locationId: await assertLocation(ctx, input.locationId),
+    locationId: await resolveLocation(ctx, input),
     whereText: nullable(input.whereText),
     instructions: nullable(input.instructions),
     phone: nullable(input.phone),

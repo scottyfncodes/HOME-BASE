@@ -1,9 +1,10 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
-import { AssetSelect, LocationSelect, ProviderSelect } from "@/components/forms/pickers";
+import { AssetSelect, ProviderSelect } from "@/components/forms/pickers";
 import { recordMaintenanceAction } from "../../actions";
 
 type Opt = { id: string; name: string };
@@ -28,9 +29,7 @@ export function LogForm({ today, assetId, assets, locations, providers }: { toda
               <Field label="Item" htmlFor="assetId" optional error={state.errors?.assetId}>
                 <AssetSelect assets={assets} defaultValue={state.values?.assetId ?? assetId} />
               </Field>
-              <Field label="Room / area" htmlFor="locationId" optional error={state.errors?.locationId}>
-                <LocationSelect locations={locations} defaultValue={state.values?.locationId} />
-              </Field>
+              <LocationField locations={locations} label="Room / area" defaultValue={state.values?.locationId} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
             </FormGrid>
             <Field label="Who did it" htmlFor="providerId" optional error={state.errors?.providerId}>
               <ProviderSelect providers={providers} defaultValue={state.values?.providerId} />

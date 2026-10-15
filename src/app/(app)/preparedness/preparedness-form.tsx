@@ -1,10 +1,10 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { useState } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
-import { LocationSelect } from "@/components/forms/pickers";
 import { PREPAREDNESS_KINDS, PREPAREDNESS_KIND_LABELS, type PreparednessKind } from "@/core/domain/validation";
 import { createPreparednessAction, updatePreparednessAction } from "./actions";
 
@@ -62,9 +62,7 @@ export function PreparednessForm({ item, locations, cancelHref }: { item?: PrepF
                 </Field>
               ) : (
                 <FormGrid>
-                  <Field label="Room / area" htmlFor="locationId" optional error={state.errors?.locationId}>
-                    <LocationSelect locations={locations} defaultValue={v("locationId", item?.locationId)} />
-                  </Field>
+                  <LocationField locations={locations} label="Room / area" defaultValue={v("locationId", item?.locationId)} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
                   <Field label="Exactly where" htmlFor="whereText" optional error={state.errors?.whereText} hint="Describe it so a visitor could find it.">
                     <Input id="whereText" name="whereText" placeholder={hint.where} defaultValue={v("whereText", item?.whereText)} />
                   </Field>

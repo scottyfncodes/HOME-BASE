@@ -23,7 +23,7 @@ export async function createTaskAction(_p: ActionState, formData: FormData): Pro
     revalidatePath("/maintenance");
     revalidatePath("/home");
     redirect(`/maintenance/${row.id}`);
-  });
+  }, formData);
 }
 
 export async function updateTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -36,7 +36,7 @@ export async function updateTaskAction(_p: ActionState, formData: FormData): Pro
     revalidatePath("/maintenance");
     revalidatePath("/home");
     redirect(`/maintenance/${id}`);
-  });
+  }, formData);
 }
 
 export async function completeTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -49,7 +49,7 @@ export async function completeTaskAction(_p: ActionState, formData: FormData): P
     revalidatePath("/maintenance");
     revalidatePath("/home");
     redirect(`/maintenance/${id}?completed=1`);
-  });
+  }, formData);
 }
 
 export async function cancelTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -60,7 +60,7 @@ export async function cancelTaskAction(_p: ActionState, formData: FormData): Pro
     revalidatePath("/maintenance");
     revalidatePath("/home");
     redirect(`/maintenance/${id}`);
-  });
+  }, formData);
 }
 
 export async function rescheduleTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -72,7 +72,7 @@ export async function rescheduleTaskAction(_p: ActionState, formData: FormData):
     await rescheduleTask(ctx, id, date.data);
     revalidatePath("/maintenance");
     redirect(`/maintenance/${id}`);
-  });
+  }, formData);
 }
 
 export async function deleteTaskAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -82,7 +82,7 @@ export async function deleteTaskAction(_p: ActionState, formData: FormData): Pro
     revalidatePath("/maintenance");
     revalidatePath("/home");
     redirect("/maintenance");
-  });
+  }, formData);
 }
 
 export async function recordMaintenanceAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -93,7 +93,7 @@ export async function recordMaintenanceAction(_p: ActionState, formData: FormDat
     const row = await recordMaintenance(ctx, parsed.data);
     revalidatePath("/maintenance");
     redirect(row.assetId ? `/inventory/${row.assetId}` : "/maintenance?view=history");
-  });
+  }, formData);
 }
 
 export async function deleteLogAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -103,5 +103,5 @@ export async function deleteLogAction(_p: ActionState, formData: FormData): Prom
     revalidatePath("/maintenance");
     const back = String(formData.get("back") ?? "/maintenance?view=history");
     redirect(back.startsWith("/") ? back : "/maintenance?view=history");
-  });
+  }, formData);
 }

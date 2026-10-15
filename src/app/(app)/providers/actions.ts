@@ -16,7 +16,7 @@ export async function createProviderAction(_p: ActionState, formData: FormData):
     revalidatePath("/providers");
     const back = String(formData.get("back") ?? "");
     redirect(back.startsWith("/") ? back : "/providers");
-  });
+  }, formData);
 }
 
 export async function updateProviderAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -28,7 +28,7 @@ export async function updateProviderAction(_p: ActionState, formData: FormData):
     await updateProvider(ctx, id, parsed.data);
     revalidatePath("/providers");
     redirect("/providers");
-  });
+  }, formData);
 }
 
 export async function deleteProviderAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -37,5 +37,5 @@ export async function deleteProviderAction(_p: ActionState, formData: FormData):
     await deleteProvider(ctx, String(formData.get("id")));
     revalidatePath("/providers");
     redirect("/providers");
-  });
+  }, formData);
 }
