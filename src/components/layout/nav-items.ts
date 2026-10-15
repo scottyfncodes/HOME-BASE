@@ -1,9 +1,9 @@
 import {
   BookOpen,
   ClipboardList,
+  DoorOpen,
   FileText,
   Hammer,
-  Home,
   House,
   LayoutGrid,
   LifeBuoy,
@@ -18,8 +18,8 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; descripti
 
 /** Everything, in sidebar order. */
 export const PRIMARY_NAV: NavItem[] = [
-  { href: "/home", label: "Home", icon: Home, description: "What needs attention" },
-  { href: "/my-home", label: "My Home", icon: House, description: "Property, rooms and systems" },
+  { href: "/home", label: "Home", icon: House, description: "What needs attention" },
+  { href: "/my-home", label: "My Home", icon: DoorOpen, description: "Property, rooms and systems" },
   { href: "/maintenance", label: "Maintenance", icon: ClipboardList, description: "Schedule and history" },
   { href: "/inventory", label: "Inventory", icon: Package, description: "Appliances and equipment" },
   { href: "/projects", label: "Projects", icon: Hammer, description: "Repairs and renovations" },
