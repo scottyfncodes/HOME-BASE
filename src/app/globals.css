@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------------ */
+/* Home Base design tokens                                                   */
+/* Warm paper background, deep pine brand, clay accent. Dark mode mirrors   */
+/* the same roles so components never reference raw colors.                 */
+/* ------------------------------------------------------------------------ */
+
+:root {
+  --bg: #f6f3ee;
+  --surface: #ffffff;
+  --surface-2: #efebe4;
+  --surface-3: #e6e1d8;
+  --ink: #1c1917;
+  --ink-2: #5f5852;
+  --ink-3: #8a827a;
+  --line: #e5dfd5;
+  --line-strong: #cfc7bb;
+  --brand: #1f5f4f;
+  --brand-strong: #174a3e;
+  --brand-soft: #e3efea;
+  --brand-ink: #ffffff;
+  --accent: #c96a3b;
+  --accent-soft: #f7e6dc;
+  --danger: #b4433a;
+  --danger-soft: #f8e4e1;
+  --warn: #a8690f;
+  --warn-soft: #f8ecd4;
+  --ok: #2f7d4f;
+  --ok-soft: #e1f1e6;
+  --info: #3c5f8f;
+  --info-soft: #e3eaf5;
+  --ring: #1f5f4f;
+  --shadow: 0 1px 2px rgb(28 25 23 / 0.06), 0 1px 1px rgb(28 25 23 / 0.04);
+  --shadow-lg: 0 10px 30px -12px rgb(28 25 23 / 0.25);
+  --radius: 14px;
+  --nav-h: 64px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141210;
+    --surface: #1d1a17;
+    --surface-2: #26221e;
+    --surface-3: #302b26;
+    --ink: #efe9e1;
+    --ink-2: #b6ada2;
+    --ink-3: #847b71;
+    --line: #2f2a25;
+    --line-strong: #463f38;
+    --brand: #6fbfa6;
+    --brand-strong: #8fd2bd;
+    --brand-soft: #1d2f2a;
+    --brand-ink: #0f1f1a;
+    --accent: #e08a5c;
+    --accent-soft: #3a2619;
+    --danger: #e07a71;
+    --danger-soft: #3b1f1c;
+    --warn: #e0a84a;
+    --warn-soft: #3a2c12;
+    --ok: #6fc28f;
+    --ok-soft: #1b3023;
+    --info: #86a9dc;
+    --info-soft: #1d2838;
+    --ring: #6fbfa6;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-display), var(--font-sans), Georgia, serif;
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow);
+  --shadow-pop: var(--shadow-lg);
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* iOS: keep inputs from zooming by never dropping below 16px. */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+::selection {
+  background: var(--brand-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+@utility hairline {
+  border-color: var(--line);
+}
+
+/* Smooth, subtle entrance for streamed sections. */
+@keyframes hb-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility fade-in {
+  animation: hb-fade-in 220ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+  }
+}
