@@ -32,14 +32,14 @@ export default async function PreparednessItemPage({ params }: { params: Promise
               <Phone className="size-5" aria-hidden />
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-3">Call</div>
+              <div className="eyebrow">Call</div>
               <div className="font-display text-xl font-semibold">{item.phone}</div>
             </div>
           </a>
         )}
         {(item.whereText || item.location) && (
           <Card className="p-4 sm:p-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-1">Where</div>
+            <div className="eyebrow mb-1">Where</div>
             <div className="font-display text-xl font-semibold">{item.whereText ?? item.location?.name}</div>
             {item.whereText && item.location && (
               <div className="text-sm text-ink-2 mt-0.5">
@@ -50,7 +50,7 @@ export default async function PreparednessItemPage({ params }: { params: Promise
         )}
         {item.instructions && (
           <Card className="p-4 sm:p-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-1">{item.phone ? "Notes" : "How to use it"}</div>
+            <div className="eyebrow mb-1">{item.phone ? "Notes" : "How to use it"}</div>
             <p className="whitespace-pre-wrap text-[17px] leading-relaxed">{item.instructions}</p>
           </Card>
         )}

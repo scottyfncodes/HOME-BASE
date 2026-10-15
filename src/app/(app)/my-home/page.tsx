@@ -33,7 +33,7 @@ export default async function MyHomePage() {
       />
 
       <div className="flex flex-col gap-6">
-        <Card className="p-4 sm:p-5">
+        <Card className="p-4 sm:p-5 flex flex-col gap-4">
           <DescriptionList
             items={[
               property.homeType && { label: "Type", value: HOME_TYPE_LABELS[property.homeType as keyof typeof HOME_TYPE_LABELS] ?? property.homeType },

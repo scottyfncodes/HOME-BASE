@@ -21,7 +21,7 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "h-full flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors",
+                  "h-full flex flex-col items-center justify-center gap-1 text-[11px] max-[359px]:text-[10px] leading-[14px] font-semibold transition-colors",
                   active ? "text-brand" : "text-ink-3 hover:text-ink-2",
                 )}
               >

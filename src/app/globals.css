@@ -118,14 +118,20 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* iOS: keep inputs from zooming by never dropping below 16px. */
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
+/* Form controls inherit type by default. This lives in the base layer so
+   component utilities (button size, weight, variant color) still apply;
+   unlayered, it would override every utility on every <button>. */
+@layer base {
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
 }
+/* iOS: keep inputs from zooming by never dropping below 16px. Deliberately
+   unlayered so it wins over text-size utilities on small screens. */
 @media (max-width: 767px) {
   input,
   select,
@@ -148,6 +154,39 @@ button {
 }
 @utility safe-top {
   padding-top: env(safe-area-inset-top);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Type roles. Display (Fraunces) is for page titles and figures; Manrope   */
+/* carries everything else. Equivalent elements share one of these roles.   */
+/* ------------------------------------------------------------------------ */
+
+/* Headings balance their lines; running text avoids one-word last lines. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Small uppercase label: dates, metric labels, group headers, field captions. */
+@utility eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Numbers that sit in a row or column line up digit for digit. */
+@utility figure {
+  font-family: var(--font-display), Georgia, serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 600;
+  line-height: 1;
 }
 
 @utility card {

@@ -43,7 +43,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
       />
 
       <div className="flex flex-col gap-6">
-        <Card className="p-4 sm:p-5">
+        <Card className="p-4 sm:p-5 flex flex-col gap-4">
           <DescriptionList
             items={[
               item.location && { label: "Location", value: <Link href={`/my-home/locations/${item.location.id}`} className="text-brand font-semibold">{item.location.name}</Link> },

@@ -47,12 +47,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="card p-4">
-            <div className={`font-display text-2xl font-semibold leading-none ${overBudget ? "text-danger" : ""}`}>{formatCents(project.spentCents, { compact: true }) || "$0"}</div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mt-1.5">Spent{project.budgetCents != null ? ` of ${formatCents(project.budgetCents, { compact: true })}` : ""}</div>
+            <div className={`figure text-2xl ${overBudget ? "text-danger" : ""}`}>{formatCents(project.spentCents, { compact: true }) || "$0"}</div>
+            <div className="eyebrow mt-2">Spent{project.budgetCents != null ? ` of ${formatCents(project.budgetCents, { compact: true })}` : ""}</div>
           </div>
           <div className="card p-4">
-            <div className="font-display text-2xl font-semibold leading-none">{project.tasks.length ? `${done}/${project.tasks.length}` : "–"}</div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mt-1.5">Steps done</div>
+            <div className="figure text-2xl">{project.tasks.length ? `${done}/${project.tasks.length}` : "–"}</div>
+            <div className="eyebrow mt-2">Steps done</div>
           </div>
           <div className="card p-4 col-span-2">
             <DescriptionList
@@ -146,7 +146,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
         {project.notes && (
           <Card className="p-4 sm:p-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-1">Notes</div>
+            <div className="eyebrow mb-1">Notes</div>
             <p className="whitespace-pre-wrap text-[15px]">{project.notes}</p>
           </Card>
         )}

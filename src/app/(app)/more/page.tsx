@@ -14,15 +14,15 @@ export default function MorePage() {
         {MORE_NAV.map((item) => {
           const Icon = item.icon;
           return (
-            <Link key={item.href} href={item.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2/70">
-              <div className="size-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center">
+            <Link key={item.href} href={item.href} className="flex items-center gap-3 px-4 py-3 min-h-14 hover:bg-surface-2/70 active:bg-surface-2 transition-colors">
+              <div className="size-10 shrink-0 rounded-xl bg-brand-soft text-brand flex items-center justify-center">
                 <Icon className="size-5" aria-hidden />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium">{item.label}</div>
-                {item.description && <div className="text-sm text-ink-2">{item.description}</div>}
+                <div className="font-medium text-[15px] leading-snug">{item.label}</div>
+                {item.description && <div className="text-sm text-ink-2 mt-0.5">{item.description}</div>}
               </div>
-              <ChevronRight className="size-4 text-ink-3" aria-hidden />
+              <ChevronRight className="size-4 shrink-0 text-ink-3" aria-hidden />
             </Link>
           );
         })}

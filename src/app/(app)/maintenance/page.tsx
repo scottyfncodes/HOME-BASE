@@ -70,10 +70,10 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
           <EmptyState compact icon={view === "overdue" ? <CheckCircle2 /> : <CalendarClock />} title={view === "overdue" ? "Nothing overdue" : "Nothing here"} description={view === "overdue" ? "Everything is on schedule." : undefined} />
         )
       ) : (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           {groups.map((g) => (
-            <section key={g.label ?? "all"} className="flex flex-col gap-2">
-              {g.label && <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-3 px-1">{g.label}</h2>}
+            <section key={g.label ?? "all"} className="flex flex-col gap-3">
+              {g.label && <h2 className="eyebrow">{g.label}</h2>}
               <Card className="divide-y divide-line overflow-hidden">
                 {g.items.map((t) => {
                   const overdue = t.status === "scheduled" && t.dueOn < today;
@@ -117,8 +117,8 @@ function addDaysStr(date: string, days: number) {
 
 function Suggestions() {
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-3 px-1">Common tasks</h2>
+    <section className="flex flex-col gap-3">
+      <h2 className="eyebrow">Common tasks</h2>
       <div className="flex flex-wrap gap-2">
         {TASK_SUGGESTIONS.slice(0, 10).map((s) => (
           <Link
