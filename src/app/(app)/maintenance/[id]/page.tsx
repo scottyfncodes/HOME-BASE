@@ -20,6 +20,14 @@ export default async function TaskPage({ params, searchParams }: { params: Promi
   const [task, history] = await Promise.all([orNotFound(getTask(ctx, id)), getTaskHistory(ctx, id)]);
   const today = todayIn(ctx.timezone);
   const overdue = task.status === "scheduled" && task.dueOn < today;
+  // Only render the details card when there is something to put in it.
+  const details = [
+    task.asset && { label: "Item", value: <Link href={`/inventory/${task.asset.id}`} className="font-semibold text-brand">{task.asset.name}</Link> },
+    task.location && { label: "Room / area", value: <Link href={`/my-home/locations/${task.location.id}`} className="font-semibold text-brand">{task.location.name}</Link> },
+    task.recurrence && { label: "Repeats", value: `${describeRecurrence(task.recurrence)}, from the ${task.recurrence.anchor === "completed" ? "completion date" : "due date"}` },
+    task.estimatedMinutes && { label: "Takes about", value: `${task.estimatedMinutes} min` },
+    history.length > 0 && { label: "Last done", value: formatDate(history[0].completedOn) },
+  ];
   const guides = task.guideSlug ? [getGuide(task.guideSlug)].filter(Boolean) : guidesForTaskTitle(task.title);
 
   return (
@@ -55,9 +63,9 @@ export default async function TaskPage({ params, searchParams }: { params: Promi
         {task.status === "scheduled" && (
           <Card className={`p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 ${overdue ? "border-danger/40" : ""}`}>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-3">Due</div>
-              <div className={`font-display text-2xl font-semibold ${overdue ? "text-danger" : ""}`}>{describeDue(task.dueOn, today)}</div>
-              <div className="text-sm text-ink-2">{formatDate(task.dueOn, { month: "long" })}</div>
+              <div className="eyebrow">Due</div>
+              <div className={`font-display text-2xl leading-tight font-semibold mt-1 ${overdue ? "text-danger" : ""}`}>{describeDue(task.dueOn, today)}</div>
+              <div className="text-sm text-ink-2 mt-1">{formatDate(task.dueOn, { month: "long" })}</div>
             </div>
             <ButtonLink href={`/maintenance/${id}/complete`} size="lg">
               <CheckCircle2 className="size-5" aria-hidden /> Mark complete
@@ -65,17 +73,11 @@ export default async function TaskPage({ params, searchParams }: { params: Promi
           </Card>
         )}
 
-        <Card className="p-4 sm:p-5">
-          <DescriptionList
-            items={[
-              task.asset && { label: "Item", value: <Link href={`/inventory/${task.asset.id}`} className="font-semibold text-brand">{task.asset.name}</Link> },
-              task.location && { label: "Room / area", value: <Link href={`/my-home/locations/${task.location.id}`} className="font-semibold text-brand">{task.location.name}</Link> },
-              task.recurrence && { label: "Repeats", value: `${describeRecurrence(task.recurrence)}, from the ${task.recurrence.anchor === "completed" ? "completion date" : "due date"}` },
-              task.estimatedMinutes && { label: "Takes about", value: `${task.estimatedMinutes} min` },
-              history.length > 0 && { label: "Last done", value: formatDate(history[0].completedOn) },
-            ]}
-          />
-        </Card>
+        {details.some(Boolean) && (
+          <Card className="p-4 sm:p-5">
+            <DescriptionList items={details} />
+          </Card>
+        )}
 
         <Section title="History">
           {history.length === 0 ? (

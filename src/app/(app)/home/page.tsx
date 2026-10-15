@@ -135,12 +135,12 @@ export default async function HomePage() {
                     <div className="size-10 rounded-xl bg-accent-soft text-accent flex items-center justify-center shrink-0">
                       <LifeBuoy className="size-5" aria-hidden />
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold truncate">{s.title}</span>
+                    <div className="min-w-0 pt-2">
+                      <div className="flex items-center gap-2 min-h-6">
+                        <span className="font-semibold leading-snug truncate">{s.title}</span>
                         <Pill tone="accent">{PREPAREDNESS_KIND_LABELS[s.kind]}</Pill>
                       </div>
-                      <div className="text-sm text-ink-2 truncate">{s.whereText ?? "Location not recorded"}</div>
+                      <div className="text-sm text-ink-2 truncate mt-0.5">{s.whereText ?? "Location not recorded"}</div>
                     </div>
                   </Link>
                 ))
@@ -160,11 +160,11 @@ function QuickLink({ href, icon, title, body }: { href: string; icon: React.Reac
   return (
     <Link href={href} className="card p-4 flex items-start gap-3 hover:bg-surface-2/60 transition-colors">
       <div className="size-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center shrink-0 [&>svg]:size-5">{icon}</div>
-      <div className="min-w-0 flex-1">
-        <div className="font-semibold">{title}</div>
-        <div className="text-sm text-ink-2">{body}</div>
+      <div className="min-w-0 flex-1 pt-2">
+        <div className="font-semibold leading-6">{title}</div>
+        <div className="text-sm text-ink-2 mt-0.5">{body}</div>
       </div>
-      <ArrowRight className="size-4 text-ink-3 mt-1 shrink-0" aria-hidden />
+      <ArrowRight className="size-4 text-ink-3 mt-3 shrink-0" aria-hidden />
     </Link>
   );
 }

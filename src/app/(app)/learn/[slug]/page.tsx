@@ -21,7 +21,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         {guide.suggestedFrequency && (
           <Card className="p-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-3">How often</div>
+              <div className="eyebrow">How often</div>
               <div className="text-[15px]">{guide.suggestedFrequency}</div>
             </div>
             {suggestion && (

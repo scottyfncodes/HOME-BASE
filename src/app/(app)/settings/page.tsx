@@ -30,7 +30,7 @@ export default async function SettingsPage() {
           <Card className="p-4 sm:p-5 flex flex-col gap-4">
             <RenameHouseholdForm name={household.name} />
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-2">Members</div>
+              <div className="eyebrow mb-2">Members</div>
               <ul className="flex flex-col divide-y divide-line">
                 {members.map((m) => (
                   <li key={m.userId} className="flex items-center gap-3 py-2">
