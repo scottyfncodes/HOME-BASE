@@ -17,10 +17,22 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
   if (!secret) throw new Error("BETTER_AUTH_SECRET is required in production.");
 
   const baseURL = env.appUrl ?? "http://localhost:3000";
-  const trustedOrigins = [baseURL];
-  if (process.env.VERCEL_URL) trustedOrigins.push(`https://${process.env.VERCEL_URL}`);
-  if (process.env.VERCEL_BRANCH_URL) trustedOrigins.push(`https://${process.env.VERCEL_BRANCH_URL}`);
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) trustedOrigins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  const staticOrigins = [baseURL];
+  if (process.env.VERCEL_URL) staticOrigins.push(`https://${process.env.VERCEL_URL}`);
+  if (process.env.VERCEL_BRANCH_URL) staticOrigins.push(`https://${process.env.VERCEL_BRANCH_URL}`);
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) staticOrigins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+
+  /**
+   * Same-origin requests are always trusted: the origin a request arrives at
+   * (production domain, git-branch alias, preview URL) is by definition one
+   * we serve. Cross-origin requests must still match a configured origin.
+   */
+  const trustedOrigins = (request?: Request) => {
+    const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
+    if (!host) return staticOrigins;
+    const proto = request.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+    return [...staticOrigins, `${proto}://${host}`];
+  };
 
   return betterAuth({
     appName: "Home Base",
