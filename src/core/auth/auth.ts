@@ -30,7 +30,7 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
   const trustedOrigins = (request?: Request) => {
     const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
     if (!host) return staticOrigins;
-    const proto = request.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+    const proto = request?.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
     return [...staticOrigins, `${proto}://${host}`];
   };
 
