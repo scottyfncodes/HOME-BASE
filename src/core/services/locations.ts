@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { asset, location } from "../db/schema";
-import { NotFoundError } from "../errors";
-import type { LocationInput } from "../domain/validation";
+import { NotFoundError, ValidationError } from "../errors";
+import { inferLocationKind, NEW_LOCATION_VALUE, type LocationInput, type LocationKind } from "../domain/validation";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
 
@@ -44,6 +44,29 @@ export async function assertLocation(ctx: PropertyCtx, id: string | undefined | 
   return id;
 }
 
+/**
+ * Resolves the location chosen on a form. Either an existing location of this
+ * property, nothing, or NEW_LOCATION_VALUE with a name: then the location is
+ * created (or an existing one with the same name, ignoring case, is reused so
+ * "Hallway" typed twice does not produce two hallways).
+ */
+export async function resolveLocation(
+  ctx: PropertyCtx,
+  choice: { locationId?: string | null; newLocationName?: string | null; newLocationKind?: LocationKind | null },
+): Promise<string | null> {
+  if (choice.locationId !== NEW_LOCATION_VALUE) return assertLocation(ctx, choice.locationId);
+  const name = choice.newLocationName?.trim();
+  if (!name) {
+    throw new ValidationError("Name the new location.", { newLocationName: "Enter a name, like Hallway or Outside east wall." });
+  }
+  const existing = await ctx.db.query.location.findFirst({
+    where: and(eq(location.propertyId, ctx.propertyId), sql`lower(${location.name}) = lower(${name})`),
+  });
+  if (existing) return existing.id;
+  const row = await createLocation(ctx, { name, kind: choice.newLocationKind ?? inferLocationKind(name) });
+  return row.id;
+}
+
 export async function createLocation(ctx: PropertyCtx, input: LocationInput) {
   const [row] = await ctx.db
     .insert(location)
@@ -58,12 +81,13 @@ export async function createLocation(ctx: PropertyCtx, input: LocationInput) {
   return row;
 }
 
-export async function createLocations(ctx: PropertyCtx, names: string[], kind: LocationInput["kind"] = "room") {
+/** Bulk-creates rooms (onboarding). Without an explicit kind, each one's kind is inferred from its name. */
+export async function createLocations(ctx: PropertyCtx, names: string[], kind?: LocationKind) {
   const clean = Array.from(new Set(names.map((n) => n.trim()).filter(Boolean)));
   if (clean.length === 0) return [];
   return ctx.db
     .insert(location)
-    .values(clean.map((name, i) => ({ propertyId: ctx.propertyId, name, kind, sortOrder: i })))
+    .values(clean.map((name, i) => ({ propertyId: ctx.propertyId, name, kind: kind ?? inferLocationKind(name), sortOrder: i })))
     .returning();
 }
 

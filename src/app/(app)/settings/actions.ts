@@ -16,7 +16,7 @@ export async function renameHouseholdAction(_p: ActionState, formData: FormData)
     await renameHousehold(ctx, name);
     revalidatePath("/settings");
     return { ok: true, message: "Saved." };
-  });
+  }, formData);
 }
 
 export async function deleteAccountAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -29,5 +29,5 @@ export async function deleteAccountAction(_p: ActionState, formData: FormData): 
     const auth = await getAuth();
     await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
     redirect("/?deleted=1");
-  });
+  }, formData);
 }

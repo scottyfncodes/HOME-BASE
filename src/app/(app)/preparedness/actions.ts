@@ -16,7 +16,7 @@ export async function createPreparednessAction(_p: ActionState, formData: FormDa
     revalidatePath("/preparedness");
     revalidatePath("/home");
     redirect("/preparedness");
-  });
+  }, formData);
 }
 
 export async function updatePreparednessAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -29,7 +29,7 @@ export async function updatePreparednessAction(_p: ActionState, formData: FormDa
     revalidatePath("/preparedness");
     revalidatePath("/home");
     redirect(`/preparedness/${id}`);
-  });
+  }, formData);
 }
 
 export async function deletePreparednessAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -39,5 +39,5 @@ export async function deletePreparednessAction(_p: ActionState, formData: FormDa
     revalidatePath("/preparedness");
     revalidatePath("/home");
     redirect("/preparedness");
-  });
+  }, formData);
 }

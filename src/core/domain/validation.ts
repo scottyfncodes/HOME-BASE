@@ -126,6 +126,30 @@ export const LOCATION_KIND_LABELS: Record<(typeof LOCATION_KINDS)[number], strin
   other: "Other",
 };
 
+export type LocationKind = (typeof LOCATION_KINDS)[number];
+
+/** Sentinel `locationId` value meaning "create the location named in newLocationName". */
+export const NEW_LOCATION_VALUE = "__new";
+
+/**
+ * Best guess at what kind of place a name describes, so "Outside east wall"
+ * is filed as exterior and "Hallway" as an area without asking.
+ */
+export function inferLocationKind(name: string): LocationKind {
+  const n = name.toLowerCase();
+  if (/\b(outside|outdoors?|exterior|yard|patio|deck|porch|driveway|roof|garden|side of (the )?house)\b/.test(n)) return "exterior";
+  if (/\b(closet|attic|storage|crawl ?space|pantry|shed)\b/.test(n)) return "storage";
+  if (/\b(utility|laundry|mechanical|furnace|boiler)\b/.test(n)) return "utility";
+  if (/\b(hall|hallway|entry|entryway|foyer|landing|stairs?|stairway|corridor|mudroom)\b/.test(n)) return "area";
+  return "room";
+}
+
+/** Fields every form with a location picker may send to create a location inline. */
+const newLocationFields = {
+  newLocationName: z.string().trim().max(80, "Keep it under 80 characters.").optional(),
+  newLocationKind: z.enum(LOCATION_KINDS).optional(),
+};
+
 export const locationInput = z.object({
   name: shortText(80),
   kind: z.enum(LOCATION_KINDS).default("room"),
@@ -172,6 +196,7 @@ export const ASSET_CATEGORY_LABELS: Record<AssetCategory, string> = {
 };
 
 export const assetInput = z.object({
+  ...newLocationFields,
   name: shortText(120),
   category: z.enum(ASSET_CATEGORIES).default("other"),
   locationId: optionalId,
@@ -200,6 +225,7 @@ export const recurrenceInput = z
   .nullable();
 
 export const maintenanceTaskInput = z.object({
+  ...newLocationFields,
   title: shortText(120),
   description: optionalLong,
   dueOn: isoDate,
@@ -221,6 +247,7 @@ export const completeTaskInput = z.object({
 export type CompleteTaskInput = z.infer<typeof completeTaskInput>;
 
 export const maintenanceLogInput = z.object({
+  ...newLocationFields,
   title: shortText(120),
   completedOn: isoDate,
   notes: optionalLong,
@@ -244,6 +271,7 @@ export const PROJECT_STATUS_LABELS: Record<(typeof PROJECT_STATUSES)[number], st
 };
 
 export const projectInput = z.object({
+  ...newLocationFields,
   name: shortText(120),
   description: optionalLong,
   status: z.enum(PROJECT_STATUSES).default("planned"),
@@ -384,6 +412,7 @@ export const PREPAREDNESS_KIND_LABELS: Record<PreparednessKind, string> = {
 };
 
 export const preparednessInput = z.object({
+  ...newLocationFields,
   kind: z.enum(PREPAREDNESS_KINDS),
   title: shortText(120),
   locationId: optionalId,

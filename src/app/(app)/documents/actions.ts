@@ -17,7 +17,7 @@ export async function createDocumentAction(_p: ActionState, formData: FormData):
     revalidatePath("/documents");
     const back = String(formData.get("back") ?? "");
     redirect(back.startsWith("/") ? back : `/documents/${row.id}`);
-  });
+  }, formData);
 }
 
 export async function updateDocumentAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -33,7 +33,7 @@ export async function updateDocumentAction(_p: ActionState, formData: FormData):
     await updateDocument(ctx, id, parsed.data, fileId);
     revalidatePath("/documents");
     redirect(`/documents/${id}`);
-  });
+  }, formData);
 }
 
 export async function deleteDocumentAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -42,5 +42,5 @@ export async function deleteDocumentAction(_p: ActionState, formData: FormData):
     await deleteDocument(ctx, String(formData.get("id")));
     revalidatePath("/documents");
     redirect("/documents");
-  });
+  }, formData);
 }

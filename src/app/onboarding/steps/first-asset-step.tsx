@@ -1,4 +1,5 @@
 "use client";
+import { LocationField } from "@/components/forms/location-field";
 import { ActionForm } from "@/components/ui/action-form";
 import { Field, FormGrid, FormMessage, Input, Select } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -30,16 +31,7 @@ export function FirstAssetStep({ locations, assetCount }: { locations: Array<{ i
                 ))}
               </Select>
             </Field>
-            <Field label="Location" htmlFor="locationId" optional>
-              <Select id="locationId" name="locationId" defaultValue={state.values?.locationId ?? ""}>
-                <option value="">Not set</option>
-                {locations.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            <LocationField locations={locations} label="Location" hint="Where it lives: a room, a hallway, outside." defaultValue={state.values?.locationId} defaultNewName={state.values?.newLocationName} defaultNewKind={state.values?.newLocationKind} error={state.errors?.locationId} newNameError={state.errors?.newLocationName} />
             <Field label="Manufacturer" htmlFor="manufacturer" optional>
               <Input id="manufacturer" name="manufacturer" defaultValue={state.values?.manufacturer} />
             </Field>

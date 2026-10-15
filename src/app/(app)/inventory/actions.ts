@@ -15,7 +15,7 @@ export async function createAssetAction(_p: ActionState, formData: FormData): Pr
     const row = await createAsset(ctx, parsed.data);
     revalidatePath("/inventory");
     redirect(`/inventory/${row.id}`);
-  });
+  }, formData);
 }
 
 export async function updateAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -27,7 +27,7 @@ export async function updateAssetAction(_p: ActionState, formData: FormData): Pr
     await updateAsset(ctx, id, parsed.data);
     revalidatePath("/inventory");
     redirect(`/inventory/${id}`);
-  });
+  }, formData);
 }
 
 export async function retireAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -38,7 +38,7 @@ export async function retireAssetAction(_p: ActionState, formData: FormData): Pr
     await retireAsset(ctx, id, status);
     revalidatePath("/inventory");
     redirect(`/inventory/${id}`);
-  });
+  }, formData);
 }
 
 export async function reactivateAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -48,7 +48,7 @@ export async function reactivateAssetAction(_p: ActionState, formData: FormData)
     await reactivateAsset(ctx, id);
     revalidatePath("/inventory");
     redirect(`/inventory/${id}`);
-  });
+  }, formData);
 }
 
 export async function deleteAssetAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -57,5 +57,5 @@ export async function deleteAssetAction(_p: ActionState, formData: FormData): Pr
     await deleteAsset(ctx, String(formData.get("id")));
     revalidatePath("/inventory");
     redirect("/inventory");
-  });
+  }, formData);
 }

@@ -17,7 +17,7 @@ export async function unlockVaultAction(_p: ActionState, formData: FormData): Pr
     revalidatePath("/vault");
     const next = String(formData.get("next") ?? "");
     redirect(next.startsWith("/vault") ? next : "/vault");
-  });
+  }, formData);
 }
 
 export async function lockVaultAction(): Promise<void> {
@@ -38,7 +38,7 @@ export async function createVaultDocumentAction(_p: ActionState, formData: FormD
     await audit(ctx, "document_create", row.id);
     revalidatePath("/vault");
     redirect(`/vault/${row.id}`);
-  });
+  }, formData);
 }
 
 export async function updateVaultDocumentAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -52,7 +52,7 @@ export async function updateVaultDocumentAction(_p: ActionState, formData: FormD
     await audit(ctx, "document_update", id);
     revalidatePath("/vault");
     redirect(`/vault/${id}`);
-  });
+  }, formData);
 }
 
 export async function deleteVaultDocumentAction(_p: ActionState, formData: FormData): Promise<ActionState> {
@@ -64,5 +64,5 @@ export async function deleteVaultDocumentAction(_p: ActionState, formData: FormD
     await audit(ctx, "document_delete", id);
     revalidatePath("/vault");
     redirect("/vault");
-  });
+  }, formData);
 }
