@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ClipboardList, FileText, LifeBuoy, Lock, Package, ShieldCheck } from "lucide-react";
 import { getSessionOrNull } from "@/core/auth/session";
 import { setupProblems } from "@/core/env";
 import { ButtonLink } from "@/components/ui/button";
@@ -33,12 +32,12 @@ export default async function LandingPage() {
   if (session) redirect("/home");
 
   const features = [
-    { icon: ClipboardList, title: "Maintenance that remembers", body: "Recurring tasks with a real history, due on your local date." },
-    { icon: Package, title: "One record per thing", body: "Appliances and systems link to their manuals, receipts, and service history." },
-    { icon: FileText, title: "Records you can find", body: "Manuals, warranties, inspections, permits. Searchable, attached to what they describe." },
-    { icon: LifeBuoy, title: "Ready when it matters", body: "Shutoff locations, panel notes, and emergency contacts a thumb-tap away." },
-    { icon: Lock, title: "A real vault", body: "Deeds, passports and wills: encrypted at rest, re-authenticate to open." },
-    { icon: ShieldCheck, title: "Private by default", body: "Your household's data is yours. Export it or delete it any time." },
+    { title: "Maintenance that remembers", body: "Recurring tasks with a real history, due on your local date." },
+    { title: "One record per thing", body: "Appliances and systems link to their manuals, receipts, and service history." },
+    { title: "Records you can find", body: "Manuals, warranties, inspections, permits. Searchable, attached to what they describe." },
+    { title: "Ready when it matters", body: "Shutoff locations, panel notes, and emergency contacts a thumb-tap away." },
+    { title: "A real vault", body: "Deeds, passports and wills: encrypted at rest, re-authenticate to open." },
+    { title: "Private by default", body: "Your household's data is yours. Export it or delete it any time." },
   ];
 
   return (
@@ -77,17 +76,14 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 border-t border-line">
           {features.map((f) => (
-            <div key={f.title} className="card p-5 flex flex-col gap-3">
-              <div className="size-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center">
-                <f.icon className="size-5" aria-hidden />
-              </div>
-              <h2 className="font-semibold">{f.title}</h2>
-              <p className="text-sm text-ink-2">{f.body}</p>
+            <div key={f.title} className="border-b border-line py-5 flex flex-col gap-1.5">
+              <dt className="font-display text-lg font-semibold leading-snug">{f.title}</dt>
+              <dd className="text-[15px] text-ink-2 max-w-prose">{f.body}</dd>
             </div>
           ))}
-        </section>
+        </dl>
 
         <footer className="text-sm text-ink-3 pb-6">Home Base is in early access. Your data is stored privately and never used for anything else.</footer>
       </div>
