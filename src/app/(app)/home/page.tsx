@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CalendarClock, DoorOpen, Hammer, LifeBuoy, Package, Plus, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, DoorOpen, Hammer, HousePlus, LifeBuoy, Package, Plus, ShieldAlert } from "lucide-react";
 import { requirePropertyCtx } from "@/core/auth/session";
 import { getDashboard } from "@/core/services/dashboard";
 import { getProperty } from "@/core/services/property";
@@ -24,9 +24,9 @@ export default async function HomePage() {
       />
 
       {dash.isEmpty ? (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           <EmptyState
-            icon={<Sparkles />}
+            icon={<HousePlus />}
             title={`Start building ${property.name}`}
             description="Nothing here is required. Add what you have, when you have time, and Home Base will keep it organized."
             action={
@@ -40,11 +40,13 @@ export default async function HomePage() {
               </>
             }
           />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <QuickLink href="/my-home" icon={<DoorOpen />} title="Set up rooms" body="Give your systems a place to live." />
-            <QuickLink href="/preparedness" icon={<LifeBuoy />} title="Record shutoffs" body="Water, gas and electrical, findable in seconds." />
-            <QuickLink href="/documents/new" icon={<Package />} title="File a manual" body="Attach it to the appliance it belongs to." />
-          </div>
+          <Section title="Good first steps">
+            <Card className="divide-y divide-line overflow-hidden">
+              <Row href="/my-home" icon={<DoorOpen />} title="Set up rooms" subtitle="Give your systems a place to live." />
+              <Row href="/preparedness" icon={<LifeBuoy />} title="Record shutoffs" subtitle="Water, gas and electrical, findable in seconds." />
+              <Row href="/documents/new" icon={<Package />} title="File a manual" subtitle="Attach it to the appliance it belongs to." />
+            </Card>
+          </Section>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
