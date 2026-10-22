@@ -15,7 +15,7 @@
    | --- | --- |
    | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
    | `VAULT_MASTER_KEY` | `openssl rand -base64 32` (32 bytes, base64). Back it up. |
-   | `APP_URL` | The production origin, e.g. `https://home-base.vercel.app` |
+   | `APP_URL` | The production origin, e.g. `https://home-base-haveanapp.vercel.app` |
    | `MAX_UPLOAD_MB` | optional, default `4` |
 
    Preview deployments can share the same secrets but should use a separate
