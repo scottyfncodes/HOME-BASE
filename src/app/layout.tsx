@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 
 const sans = Manrope({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
 const display = Fraunces({
@@ -33,7 +34,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* HaveAnApp Pulse: anonymous, cookieless usage counts. */}
+        <Script src="https://haveanapp-pulse-collect.vercel.app/p.js" data-app="home-base" strategy="afterInteractive" />
+      </body>
     </html>
   );
 }
