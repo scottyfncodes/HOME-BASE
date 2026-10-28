@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      # Version comes from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # The core suite runs on in-memory PGlite; no database service is needed.
+      - run: pnpm test
+      # No DATABASE_URL is set, so scripts/migrate.mjs skips migrations and the
+      # build never reaches a real database.
+      - name: pnpm build
+        run: |
+          test -z "${DATABASE_URL:-}" || { echo "DATABASE_URL must not be set in CI"; exit 1; }
+          pnpm build
