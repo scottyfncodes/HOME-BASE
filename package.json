@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:studio": "drizzle-kit studio",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "test:backup": "bash scripts/backup-db.test.sh"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.10",
