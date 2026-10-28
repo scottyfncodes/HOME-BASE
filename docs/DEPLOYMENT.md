@@ -23,6 +23,14 @@
 4. **Redeploy.** The build runs `pnpm db:migrate` against `DATABASE_URL`
    before `next build`, so the schema is created automatically.
 
+   On Vercel only **Production** builds migrate. Preview builds print
+   "Skipping migrations on a Preview deployment" and continue, because
+   Preview currently shares the production database and a pull request must
+   not change its schema. Once Preview has its own database, set
+   `ALLOW_PREVIEW_MIGRATIONS=1` for Preview only. Outside Vercel (local
+   development, CI) migrations run whenever `DATABASE_URL` is set. The rule
+   lives in `scripts/migrate-guard.mjs`.
+
 Until step 2 is done, the deployed app shows a "needs setup" page listing
 exactly which variables are missing (`/` and `/api/health`).
 
