@@ -82,7 +82,8 @@ actions go through `ConfirmForm`, which adds a confirmation step.
 - `StorageProvider` (`src/core/storage/provider.ts`): add a private object
   storage backend (S3 / private Blob) without touching services.
 - `TASK_SUGGESTIONS` / `GUIDES` (`src/features/learn/guides.ts`): curated content.
-- Household members: the schema supports many members per household with
-  roles; invitations are not built yet.
+- Household members: owners invite by single-use link (`household_invite`,
+  token stored hashed). Members can do everything except open the Vault and
+  manage the household. A user belongs to one household at a time.
 - AI-assisted troubleshooting: Learn is static content; an assistant would
   plug in behind the same guide/asset relationships.

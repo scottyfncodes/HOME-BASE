@@ -4,6 +4,7 @@ import { getSessionOrNull } from "@/core/auth/session";
 import { setupProblems } from "@/core/env";
 import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
+import { ClearOfflinePages } from "@/components/pwa/service-worker";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +33,12 @@ export default async function LandingPage() {
   if (session) redirect("/home");
 
   const features = [
-    { title: "Maintenance that remembers", body: "Recurring tasks with a real history, due on your local date." },
+    { title: "Maintenance that remembers", body: "Recurring tasks with a real history, due on your local date and in your calendar." },
     { title: "One record per thing", body: "Appliances and systems link to their manuals, receipts, and service history." },
     { title: "Records you can find", body: "Manuals, warranties, inspections, permits. Searchable, attached to what they describe." },
-    { title: "Ready when it matters", body: "Shutoff locations, panel notes, and emergency contacts a thumb-tap away." },
+    { title: "Ready when it matters", body: "Shutoff locations, panel notes, and emergency contacts a thumb-tap away, even without a signal." },
     { title: "A real vault", body: "Deeds, passports and wills: encrypted at rest, re-authenticate to open." },
-    { title: "Private by default", body: "Your household's data is yours. Export it or delete it any time." },
+    { title: "Private by default", body: "Share it with the people you live with. Export it or delete it any time." },
   ];
 
   return (
@@ -87,6 +88,7 @@ export default async function LandingPage() {
 
         <footer className="text-sm text-ink-3 pb-6">Home Base is in early access. Your data is stored privately and never used for anything else.</footer>
       </div>
+      <ClearOfflinePages />
     </main>
   );
 }

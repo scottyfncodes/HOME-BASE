@@ -9,6 +9,8 @@ export type ActionState = {
   errors?: Record<string, string>;
   /** Echo of submitted values so the form can re-render them on error. */
   values?: Record<string, string>;
+  /** Extra output for the form to show, e.g. a freshly created link. */
+  data?: Record<string, string>;
 };
 
 export const idle: ActionState = {};

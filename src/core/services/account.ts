@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { Db } from "../db/client";
 import * as s from "../db/schema";
 import { ValidationError } from "../errors";
@@ -76,6 +76,10 @@ export async function deleteAccount(db: Db, userId: string, password: string) {
       const others = await tx.query.householdMember.findMany({ where: eq(s.householdMember.householdId, m.householdId) });
       if (others.length <= 1) {
         await tx.delete(s.household).where(eq(s.household.id, m.householdId));
+      } else if (m.role === "owner" && !others.some((o) => o.userId !== userId && o.role === "owner")) {
+        // Never leave a shared household without an owner: promote the longest-standing member.
+        const heir = others.filter((o) => o.userId !== userId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+        await tx.update(s.householdMember).set({ role: "owner" }).where(and(eq(s.householdMember.householdId, m.householdId), eq(s.householdMember.userId, heir.userId)));
       }
     }
     await tx.delete(s.user).where(eq(s.user.id, userId));

@@ -10,7 +10,7 @@ type Uploaded = { id: string; filename: string; contentType: string; sizeBytes: 
  * Picks a file, shrinks large photos in the browser, uploads to /api/files,
  * and leaves the resulting file id in a hidden input for the parent form.
  */
-export function FileUpload({ name = "fileId", vault = false, existing, maxMb = 4, accept = ACCEPT_ATTRIBUTE, capture }: { name?: string; vault?: boolean; existing?: Uploaded | null; maxMb?: number; accept?: string; capture?: boolean }) {
+export function FileUpload({ name = "fileId", vault = false, existing, maxMb = 4, accept = ACCEPT_ATTRIBUTE, capture, prompt, detail }: { name?: string; vault?: boolean; existing?: Uploaded | null; maxMb?: number; accept?: string; capture?: boolean; prompt?: string; detail?: string }) {
   const [file, setFile] = useState<Uploaded | null>(existing ?? null);
   const [removed, setRemoved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -66,8 +66,10 @@ export function FileUpload({ name = "fileId", vault = false, existing, maxMb = 4
         <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-2/60 p-3">
           {isImage ? (
             preview || !vault ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview ?? `/api/files/${current.id}`} alt="" className="size-14 rounded-lg object-cover shrink-0" />
+              <a href={preview ?? `/api/files/${current.id}`} target="_blank" rel="noreferrer" className="shrink-0" aria-label="Open the photo full size">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={preview ?? `/api/files/${current.id}`} alt="" className="size-14 rounded-lg object-cover" />
+              </a>
             ) : (
               <ImageIcon className="size-6 text-ink-3 shrink-0" aria-hidden />
             )
@@ -99,8 +101,8 @@ export function FileUpload({ name = "fileId", vault = false, existing, maxMb = 4
         >
           <input ref={inputRef} type="file" accept={accept} className="sr-only" capture={capture ? "environment" : undefined} onChange={(e) => onPick(e.target.files?.[0])} disabled={busy} />
           {busy ? <Loader2 className="size-6 animate-spin text-brand" aria-hidden /> : <Upload className="size-6 text-brand" aria-hidden />}
-          <span className="font-semibold text-sm">{busy ? "Uploading…" : "Choose a file or take a photo"}</span>
-          <span className="text-xs text-ink-3">Images, PDF, Word, Excel or text · up to {maxMb} MB</span>
+          <span className="font-semibold text-sm">{busy ? "Uploading…" : (prompt ?? "Choose a file or take a photo")}</span>
+          <span className="text-xs text-ink-3">{detail ?? `Images, PDF, Word, Excel or text · up to ${maxMb} MB`}</span>
         </label>
       )}
       {error && (

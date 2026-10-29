@@ -56,6 +56,7 @@ async function recentFailures(db: Db, userId: string) {
  * Vault out for the rest of the window.
  */
 export async function unlockVault(ctx: Ctx, sessionId: string, password: string) {
+  if (ctx.role !== "owner") throw new ForbiddenError("The Vault is limited to household owners.");
   if (!vaultAvailable()) throw new ForbiddenError("The Vault is not configured on this server.");
   const failures = await recentFailures(ctx.db, ctx.userId);
   if (failures >= MAX_FAILED_ATTEMPTS) {

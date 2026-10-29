@@ -5,6 +5,7 @@ import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Textarea
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
 import { CategorySelect } from "@/components/forms/pickers";
+import { FileUpload } from "@/components/documents/file-upload";
 import { centsToInput } from "@/core/domain/money";
 import { createAssetAction, updateAssetAction } from "./actions";
 
@@ -24,7 +25,7 @@ export type AssetFormValues = {
   notes?: string | null;
 };
 
-export function AssetForm({ asset, locations, cancelHref }: { asset?: AssetFormValues; locations: Array<{ id: string; name: string }>; cancelHref: string }) {
+export function AssetForm({ asset, locations, cancelHref, maxUploadMb = 4 }: { asset?: AssetFormValues; locations: Array<{ id: string; name: string }>; cancelHref: string; maxUploadMb?: number }) {
   const editing = Boolean(asset?.id);
   return (
     <ActionForm action={editing ? updateAssetAction : createAssetAction}>
@@ -34,9 +35,14 @@ export function AssetForm({ asset, locations, cancelHref }: { asset?: AssetFormV
           <>
             {asset?.id && <input type="hidden" name="id" value={asset.id} />}
             <FormMessage message={state.ok === false ? state.message : undefined} />
+            {!editing && (
+              <FormSection title="Start with a photo" description="Snap the label or data plate. It is filed with the item, and you can tap it to read the model and serial number while you fill in the rest.">
+                <FileUpload name="labelPhotoId" accept="image/*" capture maxMb={maxUploadMb} prompt="Take a photo of the label" detail="Optional · or choose one from your photos" />
+              </FormSection>
+            )}
             <FormSection title="What is it?">
               <Field label="Name" htmlFor="name" error={state.errors?.name}>
-                <Input id="name" name="name" placeholder="Water heater" defaultValue={v("name", asset?.name)} required autoFocus={!editing} />
+                <Input id="name" name="name" placeholder="Water heater" defaultValue={v("name", asset?.name)} required />
               </Field>
               <FormGrid>
                 <Field label="Category" htmlFor="category" error={state.errors?.category}>

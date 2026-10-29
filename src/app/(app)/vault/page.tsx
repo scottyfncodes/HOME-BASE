@@ -27,6 +27,15 @@ export default async function VaultPage({ searchParams }: { searchParams: Promis
     );
   }
 
+  if (ctx.role !== "owner") {
+    return (
+      <>
+        <PageHeader title="Vault" description="A separate, encrypted space for deeds, passports, wills and other sensitive records." />
+        <EmptyState icon={<Lock />} title="The Vault is limited to household owners" description="Everything else in Home Base is shared with you. An owner can make you an owner in Settings if you need the Vault too." />
+      </>
+    );
+  }
+
   if (!ctx.vaultUnlocked) {
     return (
       <>

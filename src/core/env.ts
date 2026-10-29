@@ -16,7 +16,15 @@ export const env = {
   databaseUrl: optional("DATABASE_URL"),
   authSecret: optional("BETTER_AUTH_SECRET"),
   appUrl: optional("APP_URL") ?? optional("BETTER_AUTH_URL") ?? (optional("VERCEL_URL") ? `https://${optional("VERCEL_URL")}` : undefined),
+  /** Canonical public origin for links in emails sent outside a request (weekly digest). */
+  publicUrl:
+    optional("APP_URL") ??
+    (optional("VERCEL_PROJECT_PRODUCTION_URL") ? `https://${optional("VERCEL_PROJECT_PRODUCTION_URL")}` : undefined) ??
+    (optional("VERCEL_URL") ? `https://${optional("VERCEL_URL")}` : undefined),
   vaultMasterKey: optional("VAULT_MASTER_KEY"),
+  resendApiKey: optional("RESEND_API_KEY"),
+  emailFrom: optional("EMAIL_FROM"),
+  cronSecret: optional("CRON_SECRET"),
   maxUploadBytes: Math.max(1, Number(optional("MAX_UPLOAD_MB") ?? "4")) * 1024 * 1024,
   /** Where the embedded dev database and dev-only keys live. */
   dataDir: optional("HOME_BASE_DATA_DIR") ?? ".data",
@@ -45,6 +53,13 @@ export function setupProblems(): SetupProblem[] {
     problems.push({
       code: "VAULT_MASTER_KEY",
       message: "VAULT_MASTER_KEY is not set. The Secure Vault stays disabled until it is.",
+      fatal: false,
+    });
+  }
+  if (isProd && (!env.resendApiKey || !env.emailFrom)) {
+    problems.push({
+      code: "RESEND_API_KEY",
+      message: "RESEND_API_KEY and EMAIL_FROM are not set. Password reset, invite and reminder emails cannot be sent until they are.",
       fatal: false,
     });
   }

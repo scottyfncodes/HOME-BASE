@@ -22,9 +22,15 @@ private file storage, and server-side authorization on every operation.
 | **Learn** | Curated, cautious homeowner guides linked from items and tasks; one-tap scheduling of common tasks. |
 | **Vault** | A separate security boundary for deeds, passports, wills, tax records: password re-authentication, 10-minute unlock window per session, per-file envelope encryption at rest, audit log. |
 | **Search** | Global search across rooms, items, tasks, projects, documents, contacts and preparedness (never the Vault). |
-| **Account** | Household, service providers, JSON export of all data, password-confirmed account deletion. |
+| **Reminders** | Private calendar subscription (Apple, Google, Outlook) for due maintenance, warranty end dates and document expirations; optional Monday email. |
+| **Spending** | What upkeep and projects cost, by year and month, from recorded maintenance costs and expenses. |
+| **Account** | Household sharing by invite link (owners and members; the Vault stays with owners), password reset by email, service providers, JSON export of all data, password-confirmed account deletion. |
 
 There is no sample data, no payments, and no AI dependency.
+
+The pages you need in an emergency (Home, Preparedness, Service providers)
+stay readable offline on a device that opened them recently; signing out
+clears them.
 
 ## Stack
 
@@ -76,6 +82,8 @@ All documented in [`.env.example`](.env.example).
 | `APP_URL` | recommended | Public origin for auth callbacks / trusted origins (Vercel URLs are trusted automatically) |
 | `VAULT_MASTER_KEY` | for the Vault | 32-byte base64 key wrapping per-file keys |
 | `MAX_UPLOAD_MB` | no | Upload size cap (default 4, Vercel request limit) |
+| `RESEND_API_KEY` / `EMAIL_FROM` | for email | Password reset, invite and weekly reminder emails via Resend |
+| `CRON_SECRET` | for the weekly email | Authorizes the Monday reminder job (`vercel.json` cron) |
 
 Never commit real values. In production the app refuses to start the UI
 without the required variables and shows a setup page that names them.

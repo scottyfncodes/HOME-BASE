@@ -6,8 +6,11 @@ import { Loader2 } from "lucide-react";
 import { authClient } from "@/core/auth/client";
 import { Button } from "@/components/ui/button";
 import { Field, FormMessage, Input } from "@/components/ui/field";
+import { safeNext } from "@/lib/safe-next";
 
-export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
+export function AuthForm({ mode, next, intro }: { mode: "sign-in" | "sign-up"; next?: string; intro?: string }) {
+  const target = safeNext(next);
+  const carry = target ? `?next=${encodeURIComponent(target)}` : "";
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +47,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       );
       return;
     }
-    router.push(mode === "sign-up" ? "/onboarding" : "/home");
+    router.push(target ?? (mode === "sign-up" ? "/onboarding" : "/home"));
     router.refresh();
   }
 
@@ -53,7 +56,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <div>
         <h1 className="font-display text-2xl font-semibold">{mode === "sign-up" ? "Create your account" : "Welcome back"}</h1>
         <p className="text-sm text-ink-2 mt-1">
-          {mode === "sign-up" ? "Takes a minute. No credit card, no sample data." : "Sign in to your Home Base."}
+          {intro ?? (mode === "sign-up" ? "Takes a minute. No credit card, no sample data." : "Sign in to your Home Base.")}
         </p>
       </div>
       <FormMessage message={error ?? undefined} />
@@ -68,6 +71,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <Field label="Password" htmlFor="password" hint={mode === "sign-up" ? "At least 10 characters. A passphrase works well." : undefined}>
         <Input id="password" name="password" type="password" autoComplete={mode === "sign-up" ? "new-password" : "current-password"} required minLength={mode === "sign-up" ? 10 : 1} />
       </Field>
+      {mode === "sign-in" && (
+        <Link href="/forgot-password" className="text-sm font-semibold text-brand -mt-2 w-fit">
+          Forgot your password?
+        </Link>
+      )}
       <Button type="submit" size="lg" disabled={pending} className="mt-1">
         {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
         {mode === "sign-up" ? "Create account" : "Sign in"}
@@ -76,14 +84,14 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         {mode === "sign-up" ? (
           <>
             Already have an account?{" "}
-            <Link href="/sign-in" className="font-semibold text-brand">
+            <Link href={`/sign-in${carry}`} className="font-semibold text-brand">
               Sign in
             </Link>
           </>
         ) : (
           <>
             New here?{" "}
-            <Link href="/sign-up" className="font-semibold text-brand">
+            <Link href={`/sign-up${carry}`} className="font-semibold text-brand">
               Create an account
             </Link>
           </>
