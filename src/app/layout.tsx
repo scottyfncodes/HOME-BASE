@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker";
 
 const sans = Manrope({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
 const display = Fraunces({
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${sans.variable} ${display.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
+        <ServiceWorkerRegister />
         {/* HaveAnApp Pulse: anonymous, cookieless usage counts. */}
         <Script src="https://haveanapp-pulse-collect.vercel.app/p.js" data-app="home-base" strategy="afterInteractive" />
       </body>

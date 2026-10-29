@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DoorOpen, MapPin, Package, Pencil, Plus } from "lucide-react";
+import { DoorOpen, MapPin, Package, Pencil, Plus, Receipt } from "lucide-react";
 import { requirePropertyCtx } from "@/core/auth/session";
 import { formatAddress, getProperty } from "@/core/services/property";
 import { listLocationsWithCounts } from "@/core/services/locations";
@@ -55,6 +55,10 @@ export default async function MyHomePage() {
               . They help with maintenance guidance and insurance paperwork.
             </p>
           )}
+        </Card>
+
+        <Card className="overflow-hidden">
+          <Row href="/my-home/spending" icon={<Receipt />} title="Spending" subtitle="What upkeep and projects cost, by year" />
         </Card>
 
         <Section

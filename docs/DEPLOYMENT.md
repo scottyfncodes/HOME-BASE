@@ -17,6 +17,13 @@
    | `VAULT_MASTER_KEY` | `openssl rand -base64 32` (32 bytes, base64). Back it up. |
    | `APP_URL` | The production origin, e.g. `https://home-base-haveanapp.vercel.app` |
    | `MAX_UPLOAD_MB` | optional, default `4` |
+   | `RESEND_API_KEY` | From resend.com. Enables password reset, invite and reminder emails. |
+   | `EMAIL_FROM` | A sender on a domain verified in Resend, e.g. `Home Base <home@yourdomain.com>` |
+   | `CRON_SECRET` | `openssl rand -base64 32`. Vercel sends it to `/api/cron/digest` (Mondays, 14:17 UTC, see `vercel.json`). |
+
+   Without the email variables everything else works: invites fall back to a
+   link the owner copies, and the weekly email cannot be turned on. Password
+   reset needs email; there is no other recovery path.
 
    Preview deployments can share the same secrets but should use a separate
    database branch if you want isolation (Neon branches work well).

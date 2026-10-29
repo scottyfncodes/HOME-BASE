@@ -5,6 +5,10 @@ import { getDb } from "../db/client";
 import { env } from "../env";
 import * as schema from "../db/schema";
 import { ensureHouseholdForUser } from "../services/household";
+import { sendEmail } from "../email/send";
+import { passwordResetEmail } from "../email/templates";
+
+const RESET_TOKEN_MINUTES = 60;
 
 type Auth = ReturnType<typeof buildAuth>;
 
@@ -28,10 +32,8 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
    * we serve. Cross-origin requests must still match a configured origin.
    */
   const trustedOrigins = (request?: Request) => {
-    const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
-    if (!host) return staticOrigins;
-    const proto = request?.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-    return [...staticOrigins, `${proto}://${host}`];
+    const here = originOf(request);
+    return here ? [...staticOrigins, here] : staticOrigins;
   };
 
   return betterAuth({
@@ -53,6 +55,17 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
       minPasswordLength: 10,
       maxPasswordLength: 128,
       autoSignIn: true,
+      resetPasswordTokenExpiresIn: RESET_TOKEN_MINUTES * 60,
+      // A reset signs out every other device, in case the old password leaked.
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, token }, request) => {
+        // Link back to the site the request came from, but only if it is one we
+        // serve: a forged Host header must never put the token on someone else's domain.
+        const here = originOf(request);
+        const base = here && staticOrigins.includes(here) ? here : (env.publicUrl ?? baseURL);
+        const url = `${base}/reset-password?token=${encodeURIComponent(token)}`;
+        await sendEmail({ to: user.email, ...passwordResetEmail({ name: user.name, url, minutes: RESET_TOKEN_MINUTES }) });
+      },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days
@@ -65,6 +78,8 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
       customRules: {
         "/sign-in/email": { window: 60, max: 8 },
         "/sign-up/email": { window: 60, max: 5 },
+        "/request-password-reset": { window: 300, max: 3 },
+        "/reset-password": { window: 60, max: 5 },
       },
     },
     advanced: {
@@ -81,6 +96,13 @@ function buildAuth(db: Awaited<ReturnType<typeof getDb>>) {
       },
     },
   });
+}
+
+function originOf(request?: Request) {
+  const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
+  if (!host) return undefined;
+  const proto = request?.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
 }
 
 /** Lazily-built Better Auth instance (the database is created asynchronously). */

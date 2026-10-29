@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { household, householdMember, property, user } from "../db/schema";
-import { NotFoundError } from "../errors";
+import { ForbiddenError, NotFoundError } from "../errors";
 import type { Ctx, PropertyCtx } from "./context";
 
 /** Idempotently gives a user their own household. Called from the sign-up hook. */
@@ -46,6 +46,7 @@ export async function getHousehold(ctx: Ctx) {
 }
 
 export async function renameHousehold(ctx: Ctx, name: string) {
+  if (ctx.role !== "owner") throw new ForbiddenError("Only a household owner can rename it.");
   await ctx.db.update(household).set({ name }).where(eq(household.id, ctx.householdId));
 }
 

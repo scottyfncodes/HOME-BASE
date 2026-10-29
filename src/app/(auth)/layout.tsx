@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
+import { ClearOfflinePages } from "@/components/pwa/service-worker";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <span className="font-display font-semibold text-2xl">Home Base</span>
       </Link>
       <div className="w-full max-w-sm">{children}</div>
+      <ClearOfflinePages />
     </main>
   );
 }

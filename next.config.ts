@@ -37,6 +37,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // The service worker must always be revalidated so fixes reach devices.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+      {
         // Private files and vault responses must never land in shared caches.
         source: "/api/files/:path*",
         headers: [

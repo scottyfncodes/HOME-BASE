@@ -618,6 +618,52 @@ export const vaultAudit = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/* 6. Sharing and reminders                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A link that lets someone join a household. Only the SHA-256 of the token is
+ * stored; the link itself is shown once to the owner who made it.
+ */
+export const householdInvite = pgTable(
+  "household_invite",
+  {
+    id: id(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => household.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    email: text("email"),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    acceptedBy: text("accepted_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("household_invite_household_idx").on(t.householdId)],
+);
+
+/** A private calendar subscription URL, one per user. Only the token's hash is stored. */
+export const calendarFeed = pgTable("calendar_feed", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
+
+/** Per-user notification settings. */
+export const userPreference = pgTable("user_preference", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  weeklyDigest: boolean("weekly_digest").notNull().default(false),
+  lastDigestSentAt: timestamp("last_digest_sent_at", { withTimezone: true }),
+  updatedAt: updatedAt(),
+});
+
+/* -------------------------------------------------------------------------- */
 /* Relations (used for relational queries)                                     */
 /* -------------------------------------------------------------------------- */
 

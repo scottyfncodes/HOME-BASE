@@ -54,11 +54,16 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
         history.length === 0 ? (
           <EmptyState icon={<History />} title="No history yet" description="Completed tasks land here automatically. You can also log past work, like the furnace service you had last spring." action={<ButtonLink href="/maintenance/history/new" variant="secondary">Log past work</ButtonLink>} />
         ) : (
-          <Card className="divide-y divide-line overflow-hidden">
-            {history.map((h) => (
-              <Row key={h.id} icon={<CheckCircle2 className="text-ok" />} title={h.title} subtitle={[h.asset?.name, h.provider?.name, h.notes].filter(Boolean).join(" · ") || undefined} meta={<span>{formatDate(h.completedOn)}{h.costCents ? <><br />{formatCents(h.costCents)}</> : null}</span>} />
-            ))}
-          </Card>
+          <div className="flex flex-col gap-3">
+            <Card className="divide-y divide-line overflow-hidden">
+              {history.map((h) => (
+                <Row key={h.id} icon={<CheckCircle2 className="text-ok" />} title={h.title} subtitle={[h.asset?.name, h.provider?.name, h.notes].filter(Boolean).join(" · ") || undefined} meta={<span>{formatDate(h.completedOn)}{h.costCents ? <><br />{formatCents(h.costCents)}</> : null}</span>} />
+              ))}
+            </Card>
+            <Link href="/my-home/spending" className="text-sm font-semibold text-brand w-fit">
+              See what upkeep cost by year
+            </Link>
+          </div>
         )
       ) : tasks.length === 0 ? (
         view === "upcoming" ? (
@@ -91,6 +96,15 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
               </Card>
             </section>
           ))}
+          {view === "upcoming" && (
+            <p className="text-sm text-ink-2">
+              Want these on your phone?{" "}
+              <Link href="/settings#reminders" className="font-semibold text-brand">
+                Add them to your calendar
+              </Link>
+              .
+            </p>
+          )}
           {view === "upcoming" && tasks.length < 4 && <Suggestions />}
         </div>
       )}
