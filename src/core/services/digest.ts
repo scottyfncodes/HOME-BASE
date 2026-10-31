@@ -4,7 +4,8 @@ import { asset, document, maintenanceTask, user, userPreference } from "../db/sc
 import { addDays, describeDue, formatDate, todayIn } from "../domain/dates";
 import { digestEmail, type DigestLine } from "../email/templates";
 import type { Email } from "../email/send";
-import type { Ctx } from "./context";
+import type { Ctx, PropertyCtx } from "./context";
+import { householdVaccinesDue } from "./pet-health";
 import { getMembership, getPrimaryProperty } from "./household";
 
 export async function getPreferences(ctx: Ctx) {
@@ -30,11 +31,13 @@ export async function buildDigest(db: Db, userId: string, appUrl: string, now: D
   const week = addDays(today, 7);
   const month = addDays(today, 30);
 
-  const [tasks, warranties, docs] = await Promise.all([
+  const pctx: PropertyCtx = { db, userId, householdId: membership.householdId, role: membership.role, propertyId: prop.id, timezone: prop.timezone, vaultUnlocked: false };
+  const [allTasks, warranties, docs, vaccines] = await Promise.all([
     db.query.maintenanceTask.findMany({
       where: and(eq(maintenanceTask.propertyId, prop.id), eq(maintenanceTask.status, "scheduled"), lte(maintenanceTask.dueOn, week)),
+      with: { pet: { columns: { id: true, name: true, archivedAt: true } } },
       orderBy: (t, { asc }) => [asc(t.dueOn)],
-      limit: 40,
+      limit: 80,
     }),
     db.query.asset.findMany({
       where: and(eq(asset.propertyId, prop.id), eq(asset.status, "active"), gte(asset.warrantyExpiresOn, today), lte(asset.warrantyExpiresOn, month)),
@@ -44,11 +47,27 @@ export async function buildDigest(db: Db, userId: string, appUrl: string, now: D
       where: and(eq(document.propertyId, prop.id), eq(document.isVault, false), gte(document.expiresOn, today), lte(document.expiresOn, month)),
       columns: { id: true, title: true, expiresOn: true },
     }),
+    householdVaccinesDue(pctx, 30),
   ]);
 
-  const line = (t: (typeof tasks)[number]): DigestLine => ({ title: t.title, when: describeDue(t.dueOn, today), href: `${appUrl}/maintenance/${t.id}` });
+  // Pet routines that repeat more often than weekly (feeding, walks, litter)
+  // are everyday life, not something a weekly email should list.
+  const tasks = allTasks
+    .filter((t) => !t.pet?.archivedAt)
+    .filter((t) => !t.pet || !t.recurrence || (t.recurrence.unit === "day" ? t.recurrence.every >= 7 : true))
+    .slice(0, 40);
+  const line = (t: (typeof tasks)[number]): DigestLine => ({
+    title: t.pet ? `${t.pet.name}: ${t.title}` : t.title,
+    when: describeDue(t.dueOn, today),
+    href: t.pet ? `${appUrl}/pets/${t.pet.id}/care` : `${appUrl}/maintenance/${t.id}`,
+  });
   const overdue = tasks.filter((t) => t.dueOn < today).map(line);
   const upcoming = tasks.filter((t) => t.dueOn >= today).map(line);
+  for (const v of vaccines) {
+    const l: DigestLine = { title: `${v.petName}'s ${v.name}`, when: describeDue(v.nextDueOn, today), href: `${appUrl}/pets/${v.petId}/health` };
+    if (v.nextDueOn < today) overdue.push(l);
+    else upcoming.push(l);
+  }
   const expiring: DigestLine[] = [
     ...warranties.map((a) => ({ title: `${a.name} warranty`, when: `ends ${formatDate(a.warrantyExpiresOn)}`, href: `${appUrl}/inventory/${a.id}` })),
     ...docs.map((d) => ({ title: d.title, when: `expires ${formatDate(d.expiresOn)}`, href: `${appUrl}/documents/${d.id}` })),

@@ -9,13 +9,15 @@ import { nullable } from "./context";
 import { assertAsset } from "./assets";
 import { assertProject } from "./projects";
 import { deleteFile, getFileMeta } from "./files";
+import { assertPet } from "./pets";
 
-export type DocumentFilter = { q?: string; category?: string; assetId?: string; projectId?: string; limit?: number };
+export type DocumentFilter = { q?: string; category?: string; assetId?: string; projectId?: string; petId?: string; limit?: number };
 
 const docWith = {
   file: { columns: { id: true, filename: true, contentType: true, sizeBytes: true, isVault: true } },
   asset: { columns: { id: true, name: true } },
   project: { columns: { id: true, name: true } },
+  pet: { columns: { id: true, name: true } },
 } as const;
 
 export async function listDocuments(ctx: PropertyCtx, filter: DocumentFilter = {}) {
@@ -23,6 +25,7 @@ export async function listDocuments(ctx: PropertyCtx, filter: DocumentFilter = {
   if (filter.category && (DOCUMENT_CATEGORIES as readonly string[]).includes(filter.category)) conditions.push(eq(document.category, filter.category));
   if (filter.assetId) conditions.push(eq(document.assetId, filter.assetId));
   if (filter.projectId) conditions.push(eq(document.projectId, filter.projectId));
+  if (filter.petId) conditions.push(eq(document.petId, filter.petId));
   if (filter.q?.trim()) {
     const term = `%${filter.q.trim().replace(/[%_]/g, "\\$&")}%`;
     conditions.push(or(ilike(document.title, term), ilike(document.notes, term))!);
@@ -53,6 +56,7 @@ async function toRow(ctx: PropertyCtx, input: DocumentInput) {
     expiresOn: nullable(input.expiresOn),
     assetId: await assertAsset(ctx, input.assetId),
     projectId: await assertProject(ctx, input.projectId),
+    petId: await assertPet(ctx, input.petId),
     notes: nullable(input.notes),
   };
 }
@@ -64,10 +68,14 @@ async function assertFileForDocument(ctx: PropertyCtx, fileId: string | null | u
   return meta.id;
 }
 
-export async function createDocument(ctx: PropertyCtx, input: DocumentInput, fileId?: string | null) {
+/**
+ * Files a document. `links.petHealthEventId` attaches it to an entry on a
+ * pet's health timeline; the caller must have verified that entry already.
+ */
+export async function createDocument(ctx: PropertyCtx, input: DocumentInput, fileId?: string | null, links: { petHealthEventId?: string | null } = {}) {
   const [row] = await ctx.db
     .insert(document)
-    .values({ propertyId: ctx.propertyId, isVault: false, fileId: await assertFileForDocument(ctx, fileId, false), ...(await toRow(ctx, input)) })
+    .values({ propertyId: ctx.propertyId, isVault: false, fileId: await assertFileForDocument(ctx, fileId, false), petHealthEventId: links.petHealthEventId ?? null, ...(await toRow(ctx, input)) })
     .returning();
   return row;
 }

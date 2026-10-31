@@ -1,6 +1,6 @@
 /*
  * Home Base service worker. Keeps the pages you need in an emergency
- * (dashboard, preparedness, service providers) readable without a
+ * (dashboard, preparedness, service providers, pet profiles) readable without a
  * connection. Everything else, including the Vault and every file, always
  * goes to the network and is never stored here.
  */
@@ -8,7 +8,7 @@ const VERSION = "v1";
 const PAGES = `hb-pages-${VERSION}`;
 const STATIC = `hb-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
-const SAVED = [/^\/home$/, /^\/preparedness(\/[^/]+)?$/, /^\/providers(\/[^/]+)?$/];
+const SAVED = [/^\/home$/, /^\/preparedness(\/[^/]+)?$/, /^\/providers(\/[^/]+)?$/, /^\/pets$/, /^\/pets\/[^/]+$/];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

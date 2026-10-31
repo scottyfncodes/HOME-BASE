@@ -43,3 +43,10 @@ Settings → Delete account. Requires the current password and typing
 of its data (including file bytes) are deleted in one transaction. Otherwise
 only the membership and the user are removed. The session is signed out and
 the user lands on the public page.
+
+## Pets in the export
+
+The export includes `pets`, `petCareTeam`, `petHealthEvents`,
+`petVaccinations` and `petMedications`. Pet care routines and their history
+appear under `maintenanceTasks` / `maintenanceHistory` (rows with a `petId`),
+pet spending under `expenses`, and pet documents under `documents`.

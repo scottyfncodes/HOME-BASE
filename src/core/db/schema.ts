@@ -9,12 +9,17 @@
  *   3. Operations: maintenance tasks + history, documents, projects, expenses.
  *   4. Home Base specific: preparedness records.
  *   5. Vault security tables: unlock windows, audit log.
+ *   6. Sharing and reminders.
+ *   7. Pets: profiles, care team, health timeline, vaccinations, medications.
+ *      Care routines, spending, documents and preparedness reuse the tables
+ *      above through a nullable `pet_id`.
  *
  * Conventions: text ids (UUID v4), snake_case columns, timestamps in UTC,
  * calendar dates stored as ISO `YYYY-MM-DD` strings (never shifted by TZ).
  */
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   customType,
   date,
@@ -261,6 +266,11 @@ export const serviceProvider = pgTable(
     phone: text("phone"),
     email: text("email"),
     website: text("website"),
+    address: text("address"),
+    /** A separate after-hours or emergency line, when the provider has one. */
+    afterHoursPhone: text("after_hours_phone"),
+    /** Offers emergency / 24-hour service (an emergency vet clinic, a 24h plumber). */
+    isEmergency: boolean("is_emergency").notNull().default(false),
     notes: text("notes"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -351,6 +361,14 @@ export const maintenanceTask = pgTable(
       .default("scheduled"),
     estimatedMinutes: integer("estimated_minutes"),
     guideSlug: text("guide_slug"),
+    /**
+     * Pet care routines are maintenance tasks for an animal: same schedule,
+     * same completion history, same calendar feed. A task with `petId` is a
+     * care routine and is kept out of the home maintenance lists.
+     */
+    petId: text("pet_id").references((): AnyPgColumn => pet.id, { onDelete: "cascade" }),
+    careKind: text("care_kind"),
+    petMedicationId: text("pet_medication_id").references((): AnyPgColumn => petMedication.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -358,6 +376,7 @@ export const maintenanceTask = pgTable(
     index("maintenance_task_property_idx").on(t.propertyId),
     index("maintenance_task_asset_idx").on(t.assetId),
     index("maintenance_task_due_idx").on(t.propertyId, t.status, t.dueOn),
+    index("maintenance_task_pet_idx").on(t.petId),
   ],
 );
 
@@ -389,12 +408,15 @@ export const maintenanceLog = pgTable(
     completedBy: text("completed_by").references(() => user.id, {
       onDelete: "set null",
     }),
+    /** Care history for one animal (see maintenance_task.pet_id). */
+    petId: text("pet_id").references((): AnyPgColumn => pet.id, { onDelete: "cascade" }),
     createdAt: createdAt(),
   },
   (t) => [
     index("maintenance_log_property_idx").on(t.propertyId, t.completedOn),
     index("maintenance_log_asset_idx").on(t.assetId),
     index("maintenance_log_task_idx").on(t.taskId),
+    index("maintenance_log_pet_idx").on(t.petId, t.completedOn),
   ],
 );
 
@@ -493,11 +515,14 @@ export const expense = pgTable(
     spentOn: date("spent_on", { mode: "string" }).notNull(),
     category: text("category"),
     notes: text("notes"),
+    /** Spending for one animal. Kept (reference cleared) if the pet is deleted. */
+    petId: text("pet_id").references((): AnyPgColumn => pet.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
   (t) => [
     index("expense_property_idx").on(t.propertyId, t.spentOn),
     index("expense_project_idx").on(t.projectId),
+    index("expense_pet_idx").on(t.petId, t.spentOn),
   ],
 );
 
@@ -523,6 +548,8 @@ export const document = pgTable(
     expiresOn: date("expires_on", { mode: "string" }),
     notes: text("notes"),
     isVault: boolean("is_vault").notNull().default(false),
+    petId: text("pet_id").references((): AnyPgColumn => pet.id, { onDelete: "set null" }),
+    petHealthEventId: text("pet_health_event_id").references((): AnyPgColumn => petHealthEvent.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -530,6 +557,7 @@ export const document = pgTable(
     index("document_property_idx").on(t.propertyId, t.isVault),
     index("document_asset_idx").on(t.assetId),
     index("document_project_idx").on(t.projectId),
+    index("document_pet_idx").on(t.petId),
   ],
 );
 
@@ -554,6 +582,7 @@ export const preparednessItem = pgTable(
         "insurance",
         "equipment",
         "note",
+        "pet",
       ],
     }).notNull(),
     title: text("title").notNull(),
@@ -564,6 +593,8 @@ export const preparednessItem = pgTable(
     instructions: text("instructions"),
     phone: text("phone"),
     details: text("details"),
+    /** For kind "pet": the animal this applies to, or null for every pet. */
+    petId: text("pet_id").references((): AnyPgColumn => pet.id, { onDelete: "set null" }),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -663,6 +694,151 @@ export const userPreference = pgTable("user_preference", {
   updatedAt: updatedAt(),
 });
 
+
+/* -------------------------------------------------------------------------- */
+/* 7. Pets                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * An animal in the household. Pets belong to the household (they move with
+ * the family), not to a property. Every optional fact is genuinely optional:
+ * many animals have no known birthday, breed or adoption history.
+ */
+export const pet = pgTable(
+  "pet",
+  {
+    id: id(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => household.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    species: text("species", {
+      enum: ["dog", "cat", "bird", "fish", "reptile", "small_mammal", "livestock", "other"],
+    }).notNull(),
+    /** Free text for "other" or to be more specific ("Rabbit", "Bearded dragon"). */
+    speciesDetail: text("species_detail"),
+    breed: text("breed"),
+    sex: text("sex", { enum: ["female", "male", "unknown"] }),
+    birthDate: date("birth_date", { mode: "string" }),
+    birthDateEstimated: boolean("birth_date_estimated").notNull().default(false),
+    acquiredOn: date("acquired_on", { mode: "string" }),
+    acquiredFrom: text("acquired_from"),
+    color: text("color"),
+    markings: text("markings"),
+    /** Current weight, stored in grams; shown in `weightUnit`. */
+    weightGrams: integer("weight_grams"),
+    weightUnit: text("weight_unit", { enum: ["lb", "kg", "g"] }).notNull().default("lb"),
+    microchipNumber: text("microchip_number"),
+    microchipProvider: text("microchip_provider"),
+    neutered: text("neutered", { enum: ["yes", "no", "unknown"] }),
+    emergencyContactName: text("emergency_contact_name"),
+    emergencyContactPhone: text("emergency_contact_phone"),
+    insuranceProvider: text("insurance_provider"),
+    insurancePolicyNumber: text("insurance_policy_number"),
+    insurancePhone: text("insurance_phone"),
+    photoFileId: text("photo_file_id").references(() => fileObject.id, { onDelete: "set null" }),
+    notes: text("notes"),
+    /** Archived pets keep every record but leave the active views. */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    archivedReason: text("archived_reason"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("pet_household_idx").on(t.householdId, t.archivedAt)],
+);
+
+/** Which of the household's providers care for which pet, and in what role. */
+export const petProvider = pgTable(
+  "pet_provider",
+  {
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pet.id, { onDelete: "cascade" }),
+    providerId: text("provider_id")
+      .notNull()
+      .references(() => serviceProvider.id, { onDelete: "cascade" }),
+    role: text("role", {
+      enum: ["primary_vet", "vet", "emergency_vet", "specialist", "groomer", "boarding", "trainer", "sitter", "other"],
+    })
+      .notNull()
+      .default("vet"),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.petId, t.providerId] }), index("pet_provider_provider_idx").on(t.providerId)],
+);
+
+/**
+ * The health timeline: visits, conditions, allergies, procedures, tests,
+ * weights, injuries. Costs live in `expense` (linked by `expenseId`) so
+ * spending has one source of truth.
+ */
+export const petHealthEvent = pgTable(
+  "pet_health_event",
+  {
+    id: id(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pet.id, { onDelete: "cascade" }),
+    kind: text("kind", {
+      enum: ["vet_visit", "condition", "allergy", "procedure", "test", "weight", "injury", "other"],
+    }).notNull(),
+    title: text("title").notNull(),
+    occurredOn: date("occurred_on", { mode: "string" }).notNull(),
+    description: text("description"),
+    providerId: text("provider_id").references(() => serviceProvider.id, { onDelete: "set null" }),
+    expenseId: text("expense_id").references(() => expense.id, { onDelete: "set null" }),
+    weightGrams: integer("weight_grams"),
+    followUpOn: date("follow_up_on", { mode: "string" }),
+    notes: text("notes"),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("pet_health_event_pet_idx").on(t.petId, t.occurredOn), index("pet_health_event_follow_up_idx").on(t.followUpOn)],
+);
+
+export const petVaccination = pgTable(
+  "pet_vaccination",
+  {
+    id: id(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pet.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    administeredOn: date("administered_on", { mode: "string" }).notNull(),
+    nextDueOn: date("next_due_on", { mode: "string" }),
+    providerId: text("provider_id").references(() => serviceProvider.id, { onDelete: "set null" }),
+    documentId: text("document_id").references(() => document.id, { onDelete: "set null" }),
+    notes: text("notes"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("pet_vaccination_pet_idx").on(t.petId, t.administeredOn), index("pet_vaccination_due_idx").on(t.nextDueOn)],
+);
+
+/** A prescription or ongoing medication, recorded as prescribed. Never altered by the app. */
+export const petMedication = pgTable(
+  "pet_medication",
+  {
+    id: id(),
+    petId: text("pet_id")
+      .notNull()
+      .references(() => pet.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    dosage: text("dosage"),
+    frequency: text("frequency"),
+    startedOn: date("started_on", { mode: "string" }),
+    endedOn: date("ended_on", { mode: "string" }),
+    providerId: text("provider_id").references(() => serviceProvider.id, { onDelete: "set null" }),
+    instructions: text("instructions"),
+    notes: text("notes"),
+    active: boolean("active").notNull().default(true),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("pet_medication_pet_idx").on(t.petId, t.active)],
+);
+
 /* -------------------------------------------------------------------------- */
 /* Relations (used for relational queries)                                     */
 /* -------------------------------------------------------------------------- */
@@ -697,6 +873,8 @@ export const locationRelations = relations(location, ({ one, many }) => ({
 export const maintenanceTaskRelations = relations(maintenanceTask, ({ one, many }) => ({
   asset: one(asset, { fields: [maintenanceTask.assetId], references: [asset.id] }),
   location: one(location, { fields: [maintenanceTask.locationId], references: [location.id] }),
+  pet: one(pet, { fields: [maintenanceTask.petId], references: [pet.id] }),
+  medication: one(petMedication, { fields: [maintenanceTask.petMedicationId], references: [petMedication.id] }),
   logs: many(maintenanceLog),
 }));
 
@@ -704,6 +882,8 @@ export const maintenanceLogRelations = relations(maintenanceLog, ({ one }) => ({
   task: one(maintenanceTask, { fields: [maintenanceLog.taskId], references: [maintenanceTask.id] }),
   asset: one(asset, { fields: [maintenanceLog.assetId], references: [asset.id] }),
   provider: one(serviceProvider, { fields: [maintenanceLog.providerId], references: [serviceProvider.id] }),
+  pet: one(pet, { fields: [maintenanceLog.petId], references: [pet.id] }),
+  completedByUser: one(user, { fields: [maintenanceLog.completedBy], references: [user.id] }),
 }));
 
 export const projectRelations = relations(project, ({ one, many }) => ({
@@ -727,16 +907,52 @@ export const expenseRelations = relations(expense, ({ one }) => ({
   project: one(project, { fields: [expense.projectId], references: [project.id] }),
   asset: one(asset, { fields: [expense.assetId], references: [asset.id] }),
   provider: one(serviceProvider, { fields: [expense.providerId], references: [serviceProvider.id] }),
+  pet: one(pet, { fields: [expense.petId], references: [pet.id] }),
 }));
 
 export const documentRelations = relations(document, ({ one }) => ({
   asset: one(asset, { fields: [document.assetId], references: [asset.id] }),
   project: one(project, { fields: [document.projectId], references: [project.id] }),
   file: one(fileObject, { fields: [document.fileId], references: [fileObject.id] }),
+  pet: one(pet, { fields: [document.petId], references: [pet.id] }),
+  healthEvent: one(petHealthEvent, { fields: [document.petHealthEventId], references: [petHealthEvent.id] }),
 }));
 
 export const preparednessRelations = relations(preparednessItem, ({ one }) => ({
   location: one(location, { fields: [preparednessItem.locationId], references: [location.id] }),
+  pet: one(pet, { fields: [preparednessItem.petId], references: [pet.id] }),
+}));
+
+export const petRelations = relations(pet, ({ one, many }) => ({
+  household: one(household, { fields: [pet.householdId], references: [household.id] }),
+  photo: one(fileObject, { fields: [pet.photoFileId], references: [fileObject.id] }),
+  providers: many(petProvider),
+  healthEvents: many(petHealthEvent),
+  vaccinations: many(petVaccination),
+  medications: many(petMedication),
+}));
+
+export const petProviderRelations = relations(petProvider, ({ one }) => ({
+  pet: one(pet, { fields: [petProvider.petId], references: [pet.id] }),
+  provider: one(serviceProvider, { fields: [petProvider.providerId], references: [serviceProvider.id] }),
+}));
+
+export const petHealthEventRelations = relations(petHealthEvent, ({ one, many }) => ({
+  pet: one(pet, { fields: [petHealthEvent.petId], references: [pet.id] }),
+  provider: one(serviceProvider, { fields: [petHealthEvent.providerId], references: [serviceProvider.id] }),
+  expense: one(expense, { fields: [petHealthEvent.expenseId], references: [expense.id] }),
+  documents: many(document),
+}));
+
+export const petVaccinationRelations = relations(petVaccination, ({ one }) => ({
+  pet: one(pet, { fields: [petVaccination.petId], references: [pet.id] }),
+  provider: one(serviceProvider, { fields: [petVaccination.providerId], references: [serviceProvider.id] }),
+  document: one(document, { fields: [petVaccination.documentId], references: [document.id] }),
+}));
+
+export const petMedicationRelations = relations(petMedication, ({ one }) => ({
+  pet: one(pet, { fields: [petMedication.petId], references: [pet.id] }),
+  provider: one(serviceProvider, { fields: [petMedication.providerId], references: [serviceProvider.id] }),
 }));
 
 // Keep `sql` imported for future check constraints without an unused-import lint error.

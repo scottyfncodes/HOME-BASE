@@ -22,7 +22,7 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader back={{ href: "/my-home", label: "My Home" }} title="Spending" description="What keeping up this home cost: maintenance with a cost recorded, plus project and other expenses. Purchase prices of items are not counted." />
+      <PageHeader back={{ href: "/my-home", label: "My Home" }} title="Spending" description="What keeping up this home cost: maintenance with a cost recorded, plus project, pet and other expenses. Purchase prices of items are not counted." />
 
       {years.length > 1 && (
         <nav aria-label="Year" className="flex flex-wrap gap-2 mb-6">
@@ -58,6 +58,7 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
               <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                 <Split label="Maintenance" cents={s.maintenance} />
                 <Split label="Projects" cents={s.projects} />
+                {s.pets > 0 && <Split label="Pets" cents={s.pets} />}
                 {s.other > 0 && <Split label="Other expenses" cents={s.other} />}
               </dl>
             </div>
@@ -109,7 +110,7 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-[15px] leading-snug truncate">{l.title}</div>
                     <div className="text-sm text-ink-2 truncate mt-0.5">
-                      {formatDate(l.on)} · {l.kind === "maintenance" ? "Maintenance" : l.projectName ?? "Expense"}
+                      {formatDate(l.on)} · {l.kind === "maintenance" ? "Maintenance" : l.projectName ?? (l.petName ? `Pets · ${l.petName}` : "Expense")}
                       {l.assetName ? ` · ${l.assetName}` : ""}
                     </div>
                   </div>

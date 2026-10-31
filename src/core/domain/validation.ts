@@ -5,6 +5,9 @@ import { RECURRENCE_UNITS } from "./recurrence";
 
 /* ----------------------------- primitives -------------------------------- */
 
+/** A parsed input type whose defaulted fields may be omitted by direct (non-form) callers. */
+type Loose<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 export const isoDate = z
   .string()
   .trim()
@@ -319,6 +322,11 @@ export const DOCUMENT_CATEGORIES = [
   "permit",
   "photo",
   "plan",
+  "vaccination",
+  "medical",
+  "prescription",
+  "adoption",
+  "microchip",
   "other",
 ] as const;
 export const DOCUMENT_CATEGORY_LABELS: Record<(typeof DOCUMENT_CATEGORIES)[number], string> = {
@@ -333,8 +341,16 @@ export const DOCUMENT_CATEGORY_LABELS: Record<(typeof DOCUMENT_CATEGORIES)[numbe
   permit: "Permit",
   photo: "Photo",
   plan: "Plan or drawing",
+  vaccination: "Vaccination certificate",
+  medical: "Medical record",
+  prescription: "Prescription",
+  adoption: "Adoption or registration",
+  microchip: "Microchip registration",
   other: "Other",
 };
+
+/** The document categories offered first when filing something for a pet. */
+export const PET_DOCUMENT_CATEGORIES = ["vaccination", "invoice", "medical", "prescription", "adoption", "microchip", "insurance", "receipt", "photo", "other"] as const;
 
 export const VAULT_CATEGORIES = [
   "identity",
@@ -362,6 +378,7 @@ export const documentInput = z.object({
   expiresOn: optionalIsoDate,
   assetId: optionalId,
   projectId: optionalId,
+  petId: optionalId,
   notes: optionalLong,
 });
 export type DocumentInput = z.infer<typeof documentInput>;
@@ -383,9 +400,12 @@ export const providerInput = z.object({
   phone: optionalText(40),
   email: z.string().trim().max(120).email("Enter a valid email.").optional().or(z.literal("").transform(() => undefined)),
   website: optionalText(200),
+  address: optionalText(300),
+  afterHoursPhone: optionalText(40),
+  isEmergency: z.preprocess((v) => v === "on" || v === "1" || v === "true" || v === true, z.boolean()).default(false),
   notes: optionalLong,
 });
-export type ProviderInput = z.infer<typeof providerInput>;
+export type ProviderInput = Loose<z.infer<typeof providerInput>, "isEmergency">;
 
 /* ----------------------------- preparedness ------------------------------ */
 
@@ -398,6 +418,7 @@ export const PREPAREDNESS_KINDS = [
   "insurance",
   "equipment",
   "note",
+  "pet",
 ] as const;
 export type PreparednessKind = (typeof PREPAREDNESS_KINDS)[number];
 export const PREPAREDNESS_KIND_LABELS: Record<PreparednessKind, string> = {
@@ -409,6 +430,7 @@ export const PREPAREDNESS_KIND_LABELS: Record<PreparednessKind, string> = {
   insurance: "Insurance",
   equipment: "Emergency equipment",
   note: "Instructions / note",
+  pet: "Pets",
 };
 
 export const preparednessInput = z.object({
@@ -420,8 +442,205 @@ export const preparednessInput = z.object({
   instructions: optionalLong,
   phone: optionalText(40),
   details: optionalLong,
+  petId: optionalId,
 });
 export type PreparednessInput = z.infer<typeof preparednessInput>;
+
+
+/* ---------------------------------- pets --------------------------------- */
+
+export const PET_SPECIES = ["dog", "cat", "bird", "fish", "reptile", "small_mammal", "livestock", "other"] as const;
+export type PetSpecies = (typeof PET_SPECIES)[number];
+export const PET_SPECIES_LABELS: Record<PetSpecies, string> = {
+  dog: "Dog",
+  cat: "Cat",
+  bird: "Bird",
+  fish: "Fish",
+  reptile: "Reptile",
+  small_mammal: "Small mammal",
+  livestock: "Livestock",
+  other: "Other",
+};
+
+export const PET_SEXES = ["female", "male", "unknown"] as const;
+export const PET_SEX_LABELS: Record<(typeof PET_SEXES)[number], string> = { female: "Female", male: "Male", unknown: "Unknown" };
+
+export const PET_NEUTERED = ["yes", "no", "unknown"] as const;
+
+export const WEIGHT_UNITS = ["lb", "kg", "g"] as const;
+export type WeightUnit = (typeof WEIGHT_UNITS)[number];
+
+/** A weight typed by a human in the pet's unit ("12.5") → grams. Blank stays blank. */
+export const weight = z
+  .string()
+  .trim()
+  .transform((v, ctx) => {
+    if (v === "") return undefined;
+    const n = Number(v.replace(/,/g, ""));
+    if (!Number.isFinite(n) || n <= 0 || n > 100_000) {
+      ctx.addIssue({ code: "custom", message: "Enter a weight like 12.5." });
+      return z.NEVER;
+    }
+    return n;
+  })
+  .optional();
+
+const yesNo = z.preprocess((v) => v === "on" || v === "1" || v === "true" || v === true, z.boolean());
+
+export const petInput = z.object({
+  name: shortText(60),
+  species: z.enum(PET_SPECIES, { message: "Choose what kind of animal." }),
+  speciesDetail: optionalText(60),
+  breed: optionalText(80),
+  sex: z.enum(PET_SEXES).optional(),
+  birthDate: optionalIsoDate,
+  birthDateEstimated: yesNo.default(false),
+  acquiredOn: optionalIsoDate,
+  acquiredFrom: optionalText(120),
+  color: optionalText(80),
+  markings: optionalText(500),
+  weight: weight,
+  weightUnit: z.enum(WEIGHT_UNITS).default("lb"),
+  microchipNumber: optionalText(40),
+  microchipProvider: optionalText(80),
+  neutered: z.enum(PET_NEUTERED).optional(),
+  emergencyContactName: optionalText(80),
+  emergencyContactPhone: optionalText(40),
+  insuranceProvider: optionalText(80),
+  insurancePolicyNumber: optionalText(60),
+  insurancePhone: optionalText(40),
+  notes: optionalLong,
+});
+export type PetInput = Loose<z.infer<typeof petInput>, "birthDateEstimated" | "weightUnit">;
+
+export const PET_PROVIDER_ROLES = ["primary_vet", "vet", "emergency_vet", "specialist", "groomer", "boarding", "trainer", "sitter", "other"] as const;
+export type PetProviderRole = (typeof PET_PROVIDER_ROLES)[number];
+export const PET_PROVIDER_ROLE_LABELS: Record<PetProviderRole, string> = {
+  primary_vet: "Primary veterinarian",
+  vet: "Veterinarian",
+  emergency_vet: "Emergency clinic",
+  specialist: "Specialist",
+  groomer: "Groomer",
+  boarding: "Boarding",
+  trainer: "Trainer",
+  sitter: "Sitter or walker",
+  other: "Other",
+};
+
+/** Sentinel providerId meaning "create the provider described in the new* fields". */
+export const NEW_PROVIDER_VALUE = "__new";
+
+export const petProviderLinkInput = z.object({
+  providerId: uuid,
+  role: z.enum(PET_PROVIDER_ROLES).default("vet"),
+  newName: optionalText(100),
+  newPhone: optionalText(40),
+  newAfterHoursPhone: optionalText(40),
+  newAddress: optionalText(300),
+  newWebsite: optionalText(200),
+});
+export type PetProviderLinkInput = Loose<z.infer<typeof petProviderLinkInput>, "role">;
+
+export const PET_HEALTH_KINDS = ["vet_visit", "condition", "allergy", "procedure", "test", "weight", "injury", "other"] as const;
+export type PetHealthKind = (typeof PET_HEALTH_KINDS)[number];
+export const PET_HEALTH_KIND_LABELS: Record<PetHealthKind, string> = {
+  vet_visit: "Vet visit",
+  condition: "Medical condition",
+  allergy: "Allergy",
+  procedure: "Surgery or procedure",
+  test: "Diagnostic test",
+  weight: "Weight",
+  injury: "Injury",
+  other: "Other",
+};
+
+export const petHealthEventInput = z.object({
+  kind: z.enum(PET_HEALTH_KINDS),
+  title: optionalText(140),
+  occurredOn: isoDate,
+  description: optionalLong,
+  providerId: optionalId,
+  cost: money,
+  weight: weight,
+  followUpOn: optionalIsoDate,
+  notes: optionalLong,
+});
+export type PetHealthEventInput = z.infer<typeof petHealthEventInput>;
+
+export const petVaccinationInput = z
+  .object({
+    name: shortText(100),
+    administeredOn: isoDate,
+    nextDueOn: optionalIsoDate,
+    providerId: optionalId,
+    notes: optionalLong,
+  })
+  .refine((v) => !v.nextDueOn || v.nextDueOn > v.administeredOn, { message: "The next due date should be after the date given.", path: ["nextDueOn"] });
+export type PetVaccinationInput = z.infer<typeof petVaccinationInput>;
+
+export const petMedicationInput = z
+  .object({
+    name: shortText(100),
+    dosage: optionalText(120),
+    frequency: optionalText(120),
+    startedOn: optionalIsoDate,
+    endedOn: optionalIsoDate,
+    providerId: optionalId,
+    instructions: optionalLong,
+    notes: optionalLong,
+    active: yesNo.default(true),
+  })
+  .refine((v) => !v.startedOn || !v.endedOn || v.endedOn >= v.startedOn, { message: "The end date is before the start date.", path: ["endedOn"] });
+export type PetMedicationInput = Loose<z.infer<typeof petMedicationInput>, "active">;
+
+export const PET_CARE_KINDS = ["feeding", "walking", "grooming", "medication", "dental", "litter", "aquarium", "nails", "preventative", "other"] as const;
+export type PetCareKind = (typeof PET_CARE_KINDS)[number];
+export const PET_CARE_KIND_LABELS: Record<PetCareKind, string> = {
+  feeding: "Feeding",
+  walking: "Walk or exercise",
+  grooming: "Grooming",
+  medication: "Medication",
+  dental: "Dental care",
+  litter: "Litter box",
+  aquarium: "Aquarium or habitat",
+  nails: "Nail trim",
+  preventative: "Flea, tick or heartworm",
+  other: "Other",
+};
+
+export const petCareInput = z.object({
+  title: shortText(120),
+  careKind: z.enum(PET_CARE_KINDS).default("other"),
+  dueOn: isoDate,
+  recurrence: recurrenceInput.optional(),
+  description: optionalLong,
+  medicationId: optionalId,
+});
+export type PetCareInput = Loose<z.infer<typeof petCareInput>, "careKind">;
+
+export const PET_EXPENSE_CATEGORIES = ["veterinary", "medication", "food", "supplies", "grooming", "boarding", "insurance", "training", "other"] as const;
+export type PetExpenseCategory = (typeof PET_EXPENSE_CATEGORIES)[number];
+export const PET_EXPENSE_CATEGORY_LABELS: Record<PetExpenseCategory, string> = {
+  veterinary: "Veterinary care",
+  medication: "Medication",
+  food: "Food",
+  supplies: "Supplies",
+  grooming: "Grooming",
+  boarding: "Boarding",
+  insurance: "Insurance",
+  training: "Training",
+  other: "Other",
+};
+
+export const petExpenseInput = z.object({
+  title: shortText(120),
+  amount: requiredMoney,
+  spentOn: isoDate,
+  category: z.enum(PET_EXPENSE_CATEGORIES).default("other"),
+  providerId: optionalId,
+  notes: optionalLong,
+});
+export type PetExpenseInput = Loose<z.infer<typeof petExpenseInput>, "category">;
 
 /* -------------------------------- account -------------------------------- */
 

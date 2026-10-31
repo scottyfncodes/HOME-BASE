@@ -3,7 +3,8 @@ import type { Db } from "../db/client";
 import { asset, calendarFeed, document, maintenanceTask } from "../db/schema";
 import { addDays, maxISODate, todayIn } from "../domain/dates";
 import { buildCalendar, type CalendarEvent } from "../domain/ical";
-import type { Ctx } from "./context";
+import type { Ctx, PropertyCtx } from "./context";
+import { householdFollowUps, householdVaccinesDue } from "./pet-health";
 import { getMembership, getPrimaryProperty } from "./household";
 import { hashToken, newToken } from "./tokens";
 
@@ -31,8 +32,10 @@ export async function deleteCalendarFeed(ctx: Ctx) {
 
 /**
  * Renders the feed behind a secret token, or null when the token is unknown.
- * Contents: scheduled maintenance (overdue items sit on today so they stay
- * visible), warranty end dates, and document expirations. Never the Vault.
+ * Contents: scheduled maintenance and pet care routines (overdue items sit on
+ * today so they stay visible), warranty end dates, document expirations, pet
+ * vaccinations coming due and vet follow-ups. Never the Vault, never
+ * archived pets.
  */
 export async function renderCalendarFeed(db: Db, token: string, appUrl: string, now: Date = new Date()): Promise<string | null> {
   const feed = await db.query.calendarFeed.findFirst({ where: eq(calendarFeed.tokenHash, hashToken(token)) });
@@ -46,10 +49,11 @@ export async function renderCalendarFeed(db: Db, token: string, appUrl: string, 
 
   const today = todayIn(prop.timezone, now);
   const horizon = addDays(today, 400);
-  const [tasks, warranties, docs] = await Promise.all([
+  const pctx: PropertyCtx = { ...ctx, propertyId: prop.id, timezone: prop.timezone, vaultUnlocked: false };
+  const [tasks, warranties, docs, vaccines, followUps] = await Promise.all([
     db.query.maintenanceTask.findMany({
       where: and(eq(maintenanceTask.propertyId, prop.id), eq(maintenanceTask.status, "scheduled"), lte(maintenanceTask.dueOn, horizon)),
-      with: { asset: { columns: { name: true } }, location: { columns: { name: true } } },
+      with: { asset: { columns: { name: true } }, location: { columns: { name: true } }, pet: { columns: { id: true, name: true, archivedAt: true } } },
       limit: 500,
     }),
     db.query.asset.findMany({
@@ -62,20 +66,40 @@ export async function renderCalendarFeed(db: Db, token: string, appUrl: string, 
       columns: { id: true, title: true, expiresOn: true },
       limit: 200,
     }),
+    householdVaccinesDue(pctx, 400),
+    householdFollowUps(pctx, 400),
   ]);
 
   const events: CalendarEvent[] = [];
   for (const t of tasks) {
+    if (t.pet?.archivedAt) continue;
     const overdue = t.dueOn < today;
     const where = t.asset?.name ?? t.location?.name;
+    const title = t.pet ? `${t.pet.name}: ${t.title}` : t.title;
     events.push({
       uid: `task-${t.id}@homebase`,
       date: maxISODate(t.dueOn, today),
-      summary: overdue ? `Overdue: ${t.title}` : t.title,
+      // A missed daily routine is not "overdue maintenance"; it is simply due.
+      summary: overdue && !t.pet ? `Overdue: ${title}` : title,
       description: [where, overdue ? `Was due ${t.dueOn}.` : null, "Mark it done in Home Base."].filter(Boolean).join("\n"),
-      url: `${appUrl}/maintenance/${t.id}`,
+      url: t.pet ? `${appUrl}/pets/${t.pet.id}/care` : `${appUrl}/maintenance/${t.id}`,
       alarmMinutes: ALARM_MINUTES,
     });
+  }
+  for (const v of vaccines) {
+    const overdue = v.nextDueOn < today;
+    events.push({
+      uid: `vaccination-${v.id}@homebase`,
+      date: maxISODate(v.nextDueOn, today),
+      summary: overdue ? `Overdue: ${v.petName}'s ${v.name}` : `${v.petName}'s ${v.name} due`,
+      description: [overdue ? `Was due ${v.nextDueOn}.` : null, `Last given ${v.administeredOn}.`].filter(Boolean).join("\n"),
+      url: `${appUrl}/pets/${v.petId}/health`,
+      alarmMinutes: ALARM_MINUTES,
+    });
+  }
+  for (const f of followUps) {
+    if (f.followUpOn < today) continue;
+    events.push({ uid: `pet-follow-up-${f.id}@homebase`, date: f.followUpOn, summary: `${f.petName}: follow up on ${f.title}`, url: `${appUrl}/pets/${f.petId}/health`, alarmMinutes: ALARM_MINUTES });
   }
   for (const a of warranties) {
     if (!a.warrantyExpiresOn || a.warrantyExpiresOn < today) continue;

@@ -7,6 +7,10 @@ import { describeDue, formatDate } from "@/core/domain/dates";
 import { PREPAREDNESS_KIND_LABELS } from "@/core/domain/validation";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader, Pill, Row, Section, Stat } from "@/components/ui/page";
+import { PetAvatar } from "@/components/pets/pet-avatar";
+import { PetTagIcon } from "@/components/pets/pet-tag-icon";
+import { CareDoneButton } from "../pets/care-done-button";
+import { cn } from "@/lib/cn";
 
 export const metadata = { title: "Home" };
 
@@ -45,6 +49,7 @@ export default async function HomePage() {
               <Row href="/my-home" icon={<DoorOpen />} title="Set up rooms" subtitle="Give your systems a place to live." />
               <Row href="/preparedness" icon={<LifeBuoy />} title="Record shutoffs" subtitle="Water, gas and electrical, findable in seconds." />
               <Row href="/documents/new" icon={<Package />} title="File a manual" subtitle="Attach it to the appliance it belongs to." />
+              <Row href="/pets" icon={<PetTagIcon />} title="Add your pets" subtitle="Their vet, vaccinations, routines and paperwork." />
             </Card>
           </Section>
         </div>
@@ -99,6 +104,8 @@ export default async function HomePage() {
             )}
           </Section>
 
+          {dash.pets.list.length > 0 && <PetsSummary pets={dash.pets} today={dash.today} />}
+
           {(dash.warranties.length > 0 || dash.expiringDocs.length > 0) && (
             <Section title="Expiring soon">
               <Card className="divide-y divide-line overflow-hidden">
@@ -150,11 +157,56 @@ export default async function HomePage() {
                 <QuickLink href="/preparedness/new?kind=water_shutoff" icon={<LifeBuoy />} title="Where is your water shutoff?" body="Record it now so you can find it in a hurry." />
               )}
               <QuickLink href="/inventory/new" icon={<Plus />} title="Add an item" body="Appliance, system or equipment." />
+              {dash.pets.list.length === 0 && <QuickLink href="/pets" icon={<PetTagIcon />} title="Add your pets" body="Vet, vaccinations and routines for the animals at home." />}
             </div>
           </Section>
         </div>
       )}
     </>
+  );
+}
+
+function PetsSummary({ pets, today }: { pets: Awaited<ReturnType<typeof getDashboard>>["pets"]; today: string }) {
+  const byId = new Map(pets.list.map((p) => [p.id, p]));
+  const care = pets.careDue.slice(0, 4);
+  const vaccines = pets.vaccinesDue.slice(0, 3);
+  return (
+    <Section title="Pets" action={<Link href="/pets" className="text-sm font-semibold text-brand">All pets</Link>}>
+      <Card className="overflow-hidden">
+        <ul className="flex gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none]">
+          {pets.list.map((p) => (
+            <li key={p.id} className="shrink-0">
+              <Link href={`/pets/${p.id}`} className="flex flex-col items-center gap-1.5 w-16">
+                <PetAvatar name={p.name} photoFileId={p.photoFileId} size="lg" />
+                <span className="text-sm font-semibold truncate max-w-full">{p.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {(care.length > 0 || vaccines.length > 0) && (
+          <div className="divide-y divide-line border-t border-line">
+            {care.map((t) => (
+              <div key={t.id} className="flex items-center gap-3 px-4 py-3 min-h-14">
+                <Link href={`/pets/${t.petId}/care`} className="min-w-0 flex-1">
+                  <div className="font-medium text-[15px] leading-snug truncate">{t.title}</div>
+                  <div className="text-sm text-ink-2 truncate">{t.petName} · {t.dueOn < today ? "Due" : "Today"}</div>
+                </Link>
+                <CareDoneButton petId={t.petId} routineId={t.id} compact />
+              </div>
+            ))}
+            {vaccines.map((v) => (
+              <Link key={v.id} href={`/pets/${v.petId}/health`} className="flex items-center gap-3 px-4 py-3 min-h-14 hover:bg-surface-2/60">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-[15px] leading-snug truncate">{byId.get(v.petId)?.name ?? v.petName}: {v.name}</div>
+                  <div className="text-sm text-ink-2 truncate">Vaccination</div>
+                </div>
+                <span className={cn("text-sm shrink-0", v.nextDueOn < today ? "text-danger font-semibold" : "text-ink-2")}>{describeDue(v.nextDueOn, today)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Card>
+    </Section>
   );
 }
 

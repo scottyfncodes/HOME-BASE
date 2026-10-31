@@ -10,7 +10,7 @@ export const dynamic = "force-static";
 const listSaved = `(async () => {
   const list = document.getElementById("saved");
   const empty = document.getElementById("saved-empty");
-  const labels = [[/^\\/home$/, "Home"], [/^\\/preparedness$/, "Preparedness: shutoffs and emergency info"], [/^\\/preparedness\\//, "Preparedness item"], [/^\\/providers$/, "Service providers"], [/^\\/providers\\//, "Service provider"]];
+  const labels = [[/^\\/home$/, "Home"], [/^\\/preparedness$/, "Preparedness: shutoffs and emergency info"], [/^\\/preparedness\\//, "Preparedness item"], [/^\\/providers$/, "Service providers"], [/^\\/providers\\//, "Service provider"], [/^\\/pets$/, "Pets"], [/^\\/pets\\//, "Pet profile"]];
   try {
     const keys = await (await caches.open("hb-pages-v1")).keys();
     const paths = keys.map((k) => new URL(k.url).pathname).sort();

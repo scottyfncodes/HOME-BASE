@@ -124,7 +124,7 @@ export function Row({
   icon?: ReactNode;
   trailing?: ReactNode;
 }) {
-  const inner = (
+  const body = (
     <>
       {icon && <div className="size-10 shrink-0 rounded-xl bg-surface-2 text-ink-2 flex items-center justify-center [&>svg]:size-5">{icon}</div>}
       <div className="min-w-0 flex-1">
@@ -132,13 +132,31 @@ export function Row({
         {subtitle && <div className="text-sm text-ink-2 truncate mt-0.5">{subtitle}</div>}
       </div>
       {meta && <div className="shrink-0 text-sm text-ink-2 text-right">{meta}</div>}
+    </>
+  );
+  const inner = (
+    <>
+      {body}
       {trailing}
     </>
   );
   const cls = "flex items-center gap-3 px-4 py-3 min-h-14";
   if (href) {
+    const hover = "hover:bg-surface-2/70 active:bg-surface-2 transition-colors";
+    // A trailing control (e.g. a call button) is often a link itself; links
+    // cannot nest, so it sits beside the row's link rather than inside it.
+    if (trailing) {
+      return (
+        <div className={cn("flex items-center pr-4", hover)}>
+          <Link href={href} className={cn(cls, "flex-1 min-w-0 pr-0")}>
+            {body}
+          </Link>
+          {trailing}
+        </div>
+      );
+    }
     return (
-      <Link href={href} className={cn(cls, "hover:bg-surface-2/70 active:bg-surface-2 transition-colors")}>
+      <Link href={href} className={cn(cls, hover)}>
         {inner}
       </Link>
     );
