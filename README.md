@@ -18,10 +18,11 @@ private file storage, and server-side authorization on every operation.
 | **Inventory** | One canonical record per appliance or system: manufacturer, model, serial, install/purchase dates, price, replacement value, warranty; search, filter, sort; retire/replace without losing history. |
 | **Projects** | Status, priority, dates, budget vs. actual expenses, checklist with milestones, linked items, documents. |
 | **Documents** | Manuals, receipts, estimates, warranties, inspections, insurance, HOA, permits, photos. Private uploads attached to items and projects. Searchable. |
+| **Pets** | A profile for every animal (dogs and cats first, any species supported): photo, identification, microchip, insurance, care team. Health timeline, vaccination tracker with due reminders, medications as prescribed, daily care routines with one-tap completion, pet spending, pet documents, and every pet named in the emergency plan. See [docs/PETS.md](docs/PETS.md). |
 | **Preparedness** | Water/gas/electrical shutoffs, panel notes, detectors, emergency contacts (tap to call), insurance, equipment, instructions. Conservative safety guidance. |
 | **Learn** | Curated, cautious homeowner guides linked from items and tasks; one-tap scheduling of common tasks. |
 | **Vault** | A separate security boundary for deeds, passports, wills, tax records: password re-authentication, 10-minute unlock window per session, per-file envelope encryption at rest, audit log. |
-| **Search** | Global search across rooms, items, tasks, projects, documents, contacts and preparedness (never the Vault). |
+| **Search** | Global search across rooms, items, tasks, projects, documents, contacts, preparedness and pets (never the Vault). |
 | **Reminders** | Private calendar subscription (Apple, Google, Outlook) for due maintenance, warranty end dates and document expirations; optional Monday email. |
 | **Spending** | What upkeep and projects cost, by year and month, from recorded maintenance costs and expenses. |
 | **Account** | Household sharing by invite link (owners and members; the Vault stays with owners), password reset by email, service providers, JSON export of all data, password-confirmed account deletion. |
@@ -114,11 +115,11 @@ its only member.
 ## Testing
 
 ```bash
-pnpm test        # 32 core tests, ~15s, no services needed
+pnpm test        # 90 core tests, ~30s, no services needed
 ```
 
-Browser walkthroughs used during development live outside the repo; a
-Playwright config is included for future end-to-end tests (`pnpm e2e`).
+Two Playwright walkthroughs live in `tests/e2e` (`pnpm e2e`): the core
+homeowner flow and the Pets flow.
 Desktop and iPhone-sized viewports were exercised with headless Chromium.
 Nothing here is a substitute for testing on a physical iPhone.
 

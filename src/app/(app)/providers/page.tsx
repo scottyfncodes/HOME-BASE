@@ -30,7 +30,7 @@ export default async function ProvidersPage() {
               href={`/providers/${p.id}`}
               icon={<Users />}
               title={p.name}
-              subtitle={[p.trade, p.phone].filter(Boolean).join(" · ") || undefined}
+              subtitle={[p.isEmergency ? "Emergency service" : null, p.trade, p.phone].filter(Boolean).join(" · ") || undefined}
               trailing={p.phone ? <a href={`tel:${p.phone.replace(/[^\d+]/g, "")}`} className="ml-1 size-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center" aria-label={`Call ${p.name}`}><Phone className="size-4" aria-hidden /></a> : undefined}
             />
           ))}

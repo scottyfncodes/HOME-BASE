@@ -13,3 +13,7 @@ export * from "./vault";
 export * from "./search";
 export * from "./dashboard";
 export * from "./account";
+export * from "./pets";
+export * from "./pet-health";
+export * from "./pet-care";
+export * from "./pet-spending";

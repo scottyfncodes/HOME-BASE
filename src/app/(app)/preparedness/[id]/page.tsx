@@ -17,7 +17,7 @@ export default async function PreparednessItemPage({ params }: { params: Promise
     <>
       <PageHeader
         back={{ href: "/preparedness", label: "Preparedness" }}
-        eyebrow={PREPAREDNESS_KIND_LABELS[item.kind]}
+        eyebrow={item.kind === "pet" ? (item.pet ? `Pets · ${item.pet.name}` : "Pets · every pet") : PREPAREDNESS_KIND_LABELS[item.kind]}
         title={item.title}
         actions={
           <ButtonLink href={`/preparedness/${id}/edit`} variant="secondary" size="sm">
@@ -50,7 +50,7 @@ export default async function PreparednessItemPage({ params }: { params: Promise
         )}
         {item.instructions && (
           <Card className="p-4 sm:p-5">
-            <div className="eyebrow mb-1">{item.phone ? "Notes" : "How to use it"}</div>
+            <div className="eyebrow mb-1">{item.kind === "pet" ? "Instructions" : item.phone ? "Notes" : "How to use it"}</div>
             <p className="whitespace-pre-wrap text-[17px] leading-relaxed">{item.instructions}</p>
           </Card>
         )}

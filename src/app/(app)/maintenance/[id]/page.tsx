@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BookOpen, CheckCircle2, History, Pencil, Repeat } from "lucide-react";
 import { requirePropertyCtx } from "@/core/auth/session";
 import { getTask, getTaskHistory } from "@/core/services/maintenance";
@@ -18,6 +19,8 @@ export default async function TaskPage({ params, searchParams }: { params: Promi
   const { completed } = await searchParams;
   const ctx = await requirePropertyCtx();
   const [task, history] = await Promise.all([orNotFound(getTask(ctx, id)), getTaskHistory(ctx, id)]);
+  // Pet care routines share the schedule but are managed from the pet's Care tab.
+  if (task.petId) redirect(`/pets/${task.petId}/care/${task.id}`);
   const today = todayIn(ctx.timezone);
   const overdue = task.status === "scheduled" && task.dueOn < today;
   // Only render the details card when there is something to put in it.

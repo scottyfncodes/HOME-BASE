@@ -6,6 +6,7 @@ import { Field, FormActions, FormGrid, FormMessage, FormSection, Input, Select, 
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ButtonLink } from "@/components/ui/button";
 import { PREPAREDNESS_KINDS, PREPAREDNESS_KIND_LABELS, type PreparednessKind } from "@/core/domain/validation";
+import { PET_PREP_SUGGESTIONS } from "@/core/domain/pets";
 import { createPreparednessAction, updatePreparednessAction } from "./actions";
 
 export type PrepFormValues = {
@@ -17,6 +18,7 @@ export type PrepFormValues = {
   instructions?: string | null;
   phone?: string | null;
   details?: string | null;
+  petId?: string | null;
 };
 
 const HINTS: Record<PreparednessKind, { title: string; where: string; instructions: string }> = {
@@ -28,13 +30,17 @@ const HINTS: Record<PreparednessKind, { title: string; where: string; instructio
   insurance: { title: "Homeowner's insurance", where: "", instructions: "Policy number and claims line. The declarations page lives under Documents." },
   equipment: { title: "Fire extinguisher", where: "Kitchen, under the sink", instructions: "ABC rated. Check the gauge yearly." },
   note: { title: "If the basement floods", where: "", instructions: "Step by step: what to switch off, who to call, where the sump pump breaker is." },
+  pet: { title: "Pet carriers and leashes", where: "Hall closet, top shelf", instructions: "One carrier per cat. Leashes on the hook by the back door. A week of food and medication in the blue bin." },
 };
 
-export function PreparednessForm({ item, locations, cancelHref }: { item?: PrepFormValues; locations: Array<{ id: string; name: string }>; cancelHref: string }) {
+
+export function PreparednessForm({ item, locations, pets = [], cancelHref }: { item?: PrepFormValues; locations: Array<{ id: string; name: string }>; pets?: Array<{ id: string; name: string }>; cancelHref: string }) {
   const editing = Boolean(item?.id);
   const [kind, setKind] = useState<PreparednessKind>((item?.kind as PreparednessKind) ?? "water_shutoff");
-  const hint = HINTS[kind];
+  const suggestion = kind === "pet" ? PET_PREP_SUGGESTIONS.find((s) => s.title === item?.title) : undefined;
+  const hint = suggestion ? { ...HINTS.pet, instructions: suggestion.instructions } : HINTS[kind];
   const isContact = kind === "contact" || kind === "insurance";
+  const isPet = kind === "pet";
   return (
     <ActionForm action={editing ? updatePreparednessAction : createPreparednessAction}>
       {(state) => {
@@ -53,6 +59,18 @@ export function PreparednessForm({ item, locations, cancelHref }: { item?: PrepF
                   ))}
                 </Select>
               </Field>
+              {isPet && pets.length > 0 && (
+                <Field label="For" htmlFor="petId" error={state.errors?.petId}>
+                  <Select id="petId" name="petId" defaultValue={v("petId", item?.petId)}>
+                    <option value="">Every pet</option>
+                    {pets.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
               <Field label="Title" htmlFor="title" error={state.errors?.title}>
                 <Input id="title" name="title" placeholder={hint.title} defaultValue={v("title", item?.title)} required />
               </Field>
@@ -68,9 +86,14 @@ export function PreparednessForm({ item, locations, cancelHref }: { item?: PrepF
                   </Field>
                 </FormGrid>
               )}
-              <Field label={isContact ? "Notes" : "How to use it"} htmlFor="instructions" optional error={state.errors?.instructions}>
+              <Field label={isContact ? "Notes" : isPet ? "Instructions" : "How to use it"} htmlFor="instructions" optional error={state.errors?.instructions}>
                 <Textarea id="instructions" name="instructions" placeholder={hint.instructions} defaultValue={v("instructions", item?.instructions)} rows={4} />
               </Field>
+              {isPet && (
+                <Field label="Phone" htmlFor="phone" optional hint="For a caregiver or a pet-friendly place to stay.">
+                  <Input id="phone" name="phone" type="tel" inputMode="tel" defaultValue={v("phone", item?.phone)} />
+                </Field>
+              )}
               <Field label="Details" htmlFor="details" optional hint="Policy or account numbers, breaker map, model numbers.">
                 <Textarea id="details" name="details" defaultValue={v("details", item?.details)} rows={3} />
               </Field>

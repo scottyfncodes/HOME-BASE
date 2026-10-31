@@ -7,10 +7,13 @@ import { documentsExpiringSoon } from "./documents";
 import { listTasks, taskCounts } from "./maintenance";
 import { listProjects, projectCounts } from "./projects";
 import { listLocations } from "./locations";
+import { listPets } from "./pets";
+import { householdCareDue } from "./pet-care";
+import { householdVaccinesDue } from "./pet-health";
 
 export async function getDashboard(ctx: PropertyCtx) {
   const today = todayIn(ctx.timezone);
-  const [overdue, upcoming, tCounts, projects, pCounts, warranties, expiringDocs, assetCount, locations, shutoffs] = await Promise.all([
+  const [overdue, upcoming, tCounts, projects, pCounts, warranties, expiringDocs, assetCount, locations, shutoffs, pets, careDue, vaccinesDue] = await Promise.all([
     listTasks(ctx, "overdue", { limit: 10 }),
     listTasks(ctx, "upcoming", { limit: 10, horizonDays: 30 }),
     taskCounts(ctx),
@@ -24,6 +27,9 @@ export async function getDashboard(ctx: PropertyCtx) {
       where: and(eq(preparednessItem.propertyId, ctx.propertyId), inArray(preparednessItem.kind, ["water_shutoff", "gas_shutoff", "electrical_panel"])),
       limit: 3,
     }),
+    listPets(ctx),
+    householdCareDue(ctx, 0),
+    householdVaccinesDue(ctx, 30),
   ]);
   return {
     today,
@@ -37,6 +43,7 @@ export async function getDashboard(ctx: PropertyCtx) {
     assetCount,
     locationCount: locations.length,
     shutoffs,
-    isEmpty: assetCount === 0 && locations.length === 0 && tCounts.scheduled === 0 && pCounts.open === 0,
+    pets: { list: pets, careDue, vaccinesDue },
+    isEmpty: assetCount === 0 && locations.length === 0 && tCounts.scheduled === 0 && pCounts.open === 0 && pets.length === 0,
   };
 }

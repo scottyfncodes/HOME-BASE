@@ -5,11 +5,12 @@ import type { PreparednessInput } from "../domain/validation";
 import type { PropertyCtx } from "./context";
 import { nullable } from "./context";
 import { resolveLocation } from "./locations";
+import { assertPet } from "./pets";
 
 export async function listPreparedness(ctx: PropertyCtx) {
   return ctx.db.query.preparednessItem.findMany({
     where: eq(preparednessItem.propertyId, ctx.propertyId),
-    with: { location: { columns: { id: true, name: true } } },
+    with: { location: { columns: { id: true, name: true } }, pet: { columns: { id: true, name: true } } },
     orderBy: [asc(preparednessItem.sortOrder), asc(preparednessItem.createdAt)],
   });
 }
@@ -17,7 +18,7 @@ export async function listPreparedness(ctx: PropertyCtx) {
 export async function getPreparedness(ctx: PropertyCtx, id: string) {
   const row = await ctx.db.query.preparednessItem.findFirst({
     where: and(eq(preparednessItem.id, id), eq(preparednessItem.propertyId, ctx.propertyId)),
-    with: { location: true },
+    with: { location: true, pet: { columns: { id: true, name: true } } },
   });
   if (!row) throw new NotFoundError("Record not found");
   return row;
@@ -32,6 +33,7 @@ async function toRow(ctx: PropertyCtx, input: PreparednessInput) {
     instructions: nullable(input.instructions),
     phone: nullable(input.phone),
     details: nullable(input.details),
+    petId: input.kind === "pet" ? await assertPet(ctx, input.petId) : null,
   };
 }
 

@@ -78,6 +78,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
             items={[
               doc.asset && { label: "Item", value: <Link href={`/inventory/${doc.asset.id}`} className="font-semibold text-brand">{doc.asset.name}</Link> },
               doc.project && { label: "Project", value: <Link href={`/projects/${doc.project.id}`} className="font-semibold text-brand">{doc.project.name}</Link> },
+              doc.pet && { label: "Pet", value: <Link href={`/pets/${doc.pet.id}/documents`} className="font-semibold text-brand">{doc.pet.name}</Link> },
               doc.documentDate && { label: "Document date", value: formatDate(doc.documentDate) },
               doc.expiresOn && { label: "Expires", value: formatDate(doc.expiresOn) },
               { label: "Added", value: formatDate(doc.createdAt.toISOString().slice(0, 10)) },

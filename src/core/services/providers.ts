@@ -33,6 +33,9 @@ function toRow(input: ProviderInput) {
     phone: nullable(input.phone),
     email: nullable(input.email),
     website: nullable(input.website),
+    address: nullable(input.address),
+    afterHoursPhone: nullable(input.afterHoursPhone),
+    isEmergency: input.isEmergency ?? false,
     notes: nullable(input.notes),
   };
 }
@@ -52,7 +55,7 @@ export async function updateProvider(ctx: Ctx, id: string, input: ProviderInput)
   return row;
 }
 
-/** History and expenses keep their rows; the provider reference is cleared. */
+/** History, expenses and pet records keep their rows; the provider reference is cleared. Pet care-team links are removed. */
 export async function deleteProvider(ctx: Ctx, id: string) {
   const res = await ctx.db
     .delete(serviceProvider)

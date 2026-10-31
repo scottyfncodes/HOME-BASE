@@ -71,6 +71,39 @@ no service that trusts an id from the client without checking ownership.
 - **Files** are rows in `file_object` plus bytes in `file_blob` (the
   `database` storage provider). Vault files are encrypted before storage.
 
+## Pets
+
+Pets are household-scoped (`pet.household_id`): they belong to the family,
+not the house. Pet-only tables are `pet`, `pet_provider` (care team, roles,
+one primary vet), `pet_health_event`, `pet_vaccination` and `pet_medication`.
+Everything else reuses the existing foundation through a nullable `pet_id`:
+
+| Need | Reused table | Link |
+| --- | --- | --- |
+| Care routines and reminders | `maintenance_task` | `pet_id`, `care_kind`, `pet_medication_id` |
+| Completion history | `maintenance_log` | `pet_id` (copied by `completeTask`) |
+| Spending | `expense` | `pet_id`; vet-visit costs create an expense linked from `pet_health_event.expense_id` |
+| Documents | `document` + `file_object` | `pet_id`, `pet_health_event_id`; vaccination certificates via `pet_vaccination.document_id` |
+| Veterinarians | `service_provider` | via `pet_provider`; gained `address`, `after_hours_phone`, `is_emergency` |
+| Emergency plan | `preparedness_item` | kind `pet`, optional `pet_id` (null = every pet) |
+
+There is no second reminder system. Routines are maintenance tasks with a
+`pet_id`; the maintenance lists, counts and history filter them out, while the
+calendar feed and weekly email include them (the email skips routines that
+repeat more often than weekly). Vaccination due dates and health follow-ups
+are read straight from their tables into the same feed and email.
+
+Services: `pets.ts` (profiles, care team), `pet-health.ts` (timeline,
+vaccinations, medications), `pet-care.ts` (routines on the maintenance
+tables), `pet-spending.ts`. Every child record is reached through `getPet`,
+which checks the household first.
+
+Delete behavior: deleting a pet cascades its health records, vaccinations,
+medications, routines and care history, and clears (`set null`) its expenses,
+documents and preparedness notes so household spending and paperwork stay
+whole. Archiving (the default in the UI) keeps everything and hides the pet
+from active views, reminders and the emergency plan.
+
 ## Rendering model
 
 Cache Components is disabled; every app page is dynamic and reads the

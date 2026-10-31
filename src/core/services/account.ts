@@ -30,6 +30,16 @@ export async function exportHousehold(ctx: Ctx & { vaultUnlocked?: boolean }) {
     propertyIds.length ? db.query.preparednessItem.findMany({ where: inArray(s.preparednessItem.propertyId, propertyIds) }) : [],
     db.query.fileObject.findMany({ where: eq(s.fileObject.householdId, ctx.householdId), columns: { id: true, filename: true, contentType: true, sizeBytes: true, sha256: true, isVault: true, createdAt: true } }),
   ]);
+  const pets = await db.query.pet.findMany({ where: eq(s.pet.householdId, ctx.householdId) });
+  const petIds = pets.map((p) => p.id);
+  const [petProviders, petHealthEvents, petVaccinations, petMedications] = petIds.length
+    ? await Promise.all([
+        db.query.petProvider.findMany({ where: inArray(s.petProvider.petId, petIds) }),
+        db.query.petHealthEvent.findMany({ where: inArray(s.petHealthEvent.petId, petIds) }),
+        db.query.petVaccination.findMany({ where: inArray(s.petVaccination.petId, petIds) }),
+        db.query.petMedication.findMany({ where: inArray(s.petMedication.petId, petIds) }),
+      ])
+    : [[], [], [], []];
 
   const vaultUnlocked = ctx.vaultUnlocked === true;
   return {
@@ -49,6 +59,11 @@ export async function exportHousehold(ctx: Ctx & { vaultUnlocked?: boolean }) {
     expenses,
     serviceProviders: providers,
     preparedness,
+    pets,
+    petCareTeam: petProviders,
+    petHealthEvents,
+    petVaccinations,
+    petMedications,
     documents: documents.filter((d) => !d.isVault),
     vaultDocuments: vaultUnlocked ? documents.filter((d) => d.isVault) : "locked",
     files: files
@@ -56,6 +71,7 @@ export async function exportHousehold(ctx: Ctx & { vaultUnlocked?: boolean }) {
       .map((f) => ({ ...f, download: `/api/files/${f.id}?download=1` })),
     notes: {
       files: "File bytes are not embedded. Download each file from its `download` path while signed in.",
+      pets: "Care routines and their history are included under maintenanceTasks / maintenanceHistory (rows with a petId). Pet spending is under expenses.",
       vault: vaultUnlocked ? "Vault metadata included (unlocked)." : "Vault documents omitted: unlock the Vault and export again to include their metadata.",
     },
   };

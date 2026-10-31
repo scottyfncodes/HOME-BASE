@@ -2,12 +2,12 @@ import { and, eq, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { expense, maintenanceLog } from "../db/schema";
 import type { PropertyCtx } from "./context";
 
-export type SpendingLine = { id: string; kind: "maintenance" | "expense"; title: string; on: string; cents: number; assetId: string | null; assetName: string | null; projectId: string | null; projectName: string | null };
+export type SpendingLine = { id: string; kind: "maintenance" | "expense"; title: string; on: string; cents: number; assetId: string | null; assetName: string | null; projectId: string | null; projectName: string | null; petId: string | null; petName: string | null };
 
 /**
  * What the home cost in one calendar year: completed maintenance with a cost,
- * plus every recorded expense (project or not). The purchase price of items
- * is not spending and is left out.
+ * plus every recorded expense (project, pet or neither). The purchase price
+ * of items is not spending and is left out.
  */
 export async function getSpending(ctx: PropertyCtx, year: number) {
   const from = `${year}-01-01`;
@@ -19,19 +19,20 @@ export async function getSpending(ctx: PropertyCtx, year: number) {
     }),
     ctx.db.query.expense.findMany({
       where: and(eq(expense.propertyId, ctx.propertyId), gte(expense.spentOn, from), lte(expense.spentOn, to)),
-      with: { asset: { columns: { id: true, name: true } }, project: { columns: { id: true, name: true } } },
+      with: { asset: { columns: { id: true, name: true } }, project: { columns: { id: true, name: true } }, pet: { columns: { id: true, name: true } } },
     }),
     spendingYears(ctx),
   ]);
 
   const lines: SpendingLine[] = [
-    ...logs.map((l) => ({ id: l.id, kind: "maintenance" as const, title: l.title, on: l.completedOn, cents: l.costCents ?? 0, assetId: l.asset?.id ?? null, assetName: l.asset?.name ?? null, projectId: null, projectName: null })),
-    ...expenses.map((e) => ({ id: e.id, kind: "expense" as const, title: e.title, on: e.spentOn, cents: e.amountCents, assetId: e.asset?.id ?? null, assetName: e.asset?.name ?? null, projectId: e.project?.id ?? null, projectName: e.project?.name ?? null })),
+    ...logs.map((l) => ({ id: l.id, kind: "maintenance" as const, title: l.title, on: l.completedOn, cents: l.costCents ?? 0, assetId: l.asset?.id ?? null, assetName: l.asset?.name ?? null, projectId: null, projectName: null, petId: null, petName: null })),
+    ...expenses.map((e) => ({ id: e.id, kind: "expense" as const, title: e.title, on: e.spentOn, cents: e.amountCents, assetId: e.asset?.id ?? null, assetName: e.asset?.name ?? null, projectId: e.project?.id ?? null, projectName: e.project?.name ?? null, petId: e.pet?.id ?? null, petName: e.pet?.name ?? null })),
   ].sort((a, b) => (a.on < b.on ? 1 : a.on > b.on ? -1 : b.cents - a.cents));
 
   const byMonth = Array.from({ length: 12 }, () => 0);
   let maintenance = 0;
   let projects = 0;
+  let pets = 0;
   let other = 0;
   const byAsset = new Map<string, { id: string; name: string; cents: number }>();
   const byProject = new Map<string, { id: string; name: string; cents: number }>();
@@ -39,6 +40,7 @@ export async function getSpending(ctx: PropertyCtx, year: number) {
     byMonth[Number(l.on.slice(5, 7)) - 1] += l.cents;
     if (l.kind === "maintenance") maintenance += l.cents;
     else if (l.projectId) projects += l.cents;
+    else if (l.petId) pets += l.cents;
     else other += l.cents;
     if (l.assetId && l.assetName) {
       const cur = byAsset.get(l.assetId) ?? { id: l.assetId, name: l.assetName, cents: 0 };
@@ -55,9 +57,10 @@ export async function getSpending(ctx: PropertyCtx, year: number) {
   return {
     year,
     years,
-    total: maintenance + projects + other,
+    total: maintenance + projects + pets + other,
     maintenance,
     projects,
+    pets,
     other,
     byMonth,
     topAssets: top(byAsset),

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, lt, sql } from "drizzle-orm";
 import { maintenanceLog, maintenanceTask, type Recurrence } from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
 import type { CompleteTaskInput, MaintenanceLogInput, MaintenanceTaskInput } from "../domain/validation";
@@ -16,7 +16,8 @@ const taskWith = { asset: { columns: { id: true, name: true, category: true } },
 
 export async function listTasks(ctx: PropertyCtx, view: TaskView = "upcoming", opts: { assetId?: string; limit?: number; horizonDays?: number } = {}) {
   const today = todayIn(ctx.timezone);
-  const conditions = [eq(maintenanceTask.propertyId, ctx.propertyId)];
+  // Pet care routines share this table but live under Pets, not home maintenance.
+  const conditions = [eq(maintenanceTask.propertyId, ctx.propertyId), isNull(maintenanceTask.petId)];
   if (opts.assetId) conditions.push(eq(maintenanceTask.assetId, opts.assetId));
   switch (view) {
     case "overdue":
@@ -153,6 +154,7 @@ export async function completeTask(ctx: PropertyCtx, id: string, input: Complete
         notes: nullable(input.notes),
         costCents: nullable(input.cost),
         completedBy: ctx.userId,
+        petId: task.petId,
       })
       .returning();
 
@@ -188,7 +190,7 @@ export async function recordMaintenance(ctx: PropertyCtx, input: MaintenanceLogI
 
 export async function listHistory(ctx: PropertyCtx, opts: { limit?: number } = {}) {
   return ctx.db.query.maintenanceLog.findMany({
-    where: eq(maintenanceLog.propertyId, ctx.propertyId),
+    where: and(eq(maintenanceLog.propertyId, ctx.propertyId), isNull(maintenanceLog.petId)),
     with: { asset: { columns: { id: true, name: true } }, provider: { columns: { id: true, name: true } } },
     orderBy: [desc(maintenanceLog.completedOn), desc(maintenanceLog.createdAt)],
     limit: Math.min(opts.limit ?? 100, 500),
@@ -213,6 +215,6 @@ export async function taskCounts(ctx: PropertyCtx) {
       scheduled: sql<number>`count(*)::int`,
     })
     .from(maintenanceTask)
-    .where(and(eq(maintenanceTask.propertyId, ctx.propertyId), eq(maintenanceTask.status, "scheduled")));
+    .where(and(eq(maintenanceTask.propertyId, ctx.propertyId), eq(maintenanceTask.status, "scheduled"), isNull(maintenanceTask.petId)));
   return row ?? { overdue: 0, dueSoon: 0, scheduled: 0 };
 }

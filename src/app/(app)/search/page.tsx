@@ -14,6 +14,7 @@ const KIND_LABEL: Record<string, string> = {
   location: "Room",
   provider: "Provider",
   preparedness: "Preparedness",
+  pet: "Pet",
 };
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
