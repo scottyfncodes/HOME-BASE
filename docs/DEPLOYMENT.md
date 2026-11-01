@@ -15,7 +15,7 @@
    | --- | --- |
    | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
    | `VAULT_MASTER_KEY` | `openssl rand -base64 32` (32 bytes, base64). Back it up. |
-   | `APP_URL` | The production origin, e.g. `https://home-base-haveanapp.vercel.app` |
+   | `APP_URL` | The production origin, e.g. `https://usehomebase.vercel.app` |
    | `MAX_UPLOAD_MB` | optional, default `4` |
    | `RESEND_API_KEY` | From resend.com. Enables password reset, invite and reminder emails. |
    | `EMAIL_FROM` | A sender on a domain verified in Resend, e.g. `Home Base <home@yourdomain.com>` |

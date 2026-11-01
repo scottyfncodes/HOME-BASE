@@ -34,14 +34,19 @@ Nothing runs until these are done. The workflow is `.github/workflows/backup.yml
 
 1. **Key pair**, on your own computer: `age-keygen -o home-base-backup.key`. Keep the file offline in two places (printed, and in a password manager). Its public key (`age1…`) goes in GitHub below. One key for all apps is fine; one per app limits what a lost key exposes.
 2. **Bucket.** Reuse HangarBook's Backblaze B2 bucket (Object Lock, COMPLIANCE, 30 days, files removed after a year); this app writes under `home-base/`. Make an application key for this app alone, limited to the `home-base/` name prefix, with only `writeFiles` and `readBucketRetentions` (no `deleteFiles`, `writeFileRetentions` or `bypassGovernance`).
-3. **Read-only database role**, in Neon's SQL editor on the production branch:
+3. **Read-only database role.** `home_base_backup` already exists on the production branch (Neon project `neon-indigo-lever`, database `neondb`) with `pg_read_all_data` only. It was made in SQL, not the Neon console, because console-made roles join `neon_superuser` and the backup refuses them. It has no password until you give it one, in Neon's SQL editor:
+
+   ```sql
+   alter role home_base_backup with password '<long random string>';
+   ```
+
+   Then build the **direct** connection string (host without `-pooler`) with this role:
+   `postgresql://home_base_backup:<password>@<PGHOST_UNPOOLED>/neondb?sslmode=require`. If you ever need to recreate it:
 
    ```sql
    create role home_base_backup with login password '<long random string>';
    grant pg_read_all_data to home_base_backup;
    ```
-
-   Use the **direct** connection string (host without `-pooler`) with this role.
 4. (No Blob store: this app keeps no files outside the database.)
 
 5. **GitHub.** Create the environment `backup` (Settings > Environments) limited to the `main` branch, and add:
