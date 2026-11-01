@@ -83,8 +83,9 @@ Vault already unlocked, and client-device malware.
 - **Row-level security** is not enabled. Isolation is enforced in the
   application layer (tested), not by Postgres policies. Adding RLS with a
   per-request `SET LOCAL` is the recommended next hardening step.
-- **Email verification / password reset** are not wired up (no email
-  provider). Until they are, a forgotten password means a support process.
+- **Email verification** is not wired up. **Password reset** is built (Resend)
+  but only works once `RESEND_API_KEY` and `EMAIL_FROM` are set; until then a
+  forgotten password means a support process.
 - **Key rotation**: `keyVersion` is stored per file, but no rotation tool
   exists yet. Losing `VAULT_MASTER_KEY` makes Vault files unrecoverable;
   keep it in a secret manager with a backup.

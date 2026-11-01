@@ -103,7 +103,7 @@ user's household; files are private and served only through an
 authenticated route with no-store headers; Vault files are encrypted at
 rest with envelope encryption and need the password again to open; this is
 **not** end-to-end encryption, and row-level security, email verification,
-password reset, passkeys and key rotation are documented as outstanding
+passkeys and key rotation are documented as outstanding
 work.
 
 ## Data export and deletion
@@ -125,7 +125,9 @@ Nothing here is a substitute for testing on a physical iPhone.
 
 ## Roadmap (not in this release)
 
-Household invitations, email verification and password reset, passkeys as a
-Vault convenience, Postgres row-level security, object-storage provider for
-large files, Vault key rotation, push reminders, and an AI assistant on top
-of the Learn content.
+Email verification, passkeys as a Vault convenience, Postgres row-level
+security, object-storage provider for large files, Vault key rotation, push
+reminders, and an AI assistant on top of the Learn content.
+
+Household invitations and password reset shipped; password reset needs the
+email variables (`RESEND_API_KEY`, `EMAIL_FROM`) set in production.
