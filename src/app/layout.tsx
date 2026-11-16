@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <ServiceWorkerRegister />
         {/* HaveAnApp Pulse: anonymous, cookieless usage counts. */}
-        <Script src="https://haveanapp-pulse-collect.vercel.app/p.js" data-app="home-base" strategy="afterInteractive" />
+        <Script src="https://haveanapp-pulse-collect.vercel.app/p.js" data-app="home-base" data-returning="on" strategy="afterInteractive" />
       </body>
     </html>
   );
